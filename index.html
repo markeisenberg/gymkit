@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GymKit">
+<title>GymKit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --surface3: #282828;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f0;
+    --text2: #888;
+    --text3: #555;
+    --accent: #C8FF00;
+    --accent-dim: rgba(200,255,0,0.12);
+    --accent-glow: rgba(200,255,0,0.25);
+    --red: #ff4444;
+    --red-dim: rgba(255,68,68,0.12);
+    --green: #4cff91;
+    --green-dim: rgba(76,255,145,0.12);
+    --blue: #4ab0ff;
+    --orange: #ff9f4a;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); overflow: hidden; }
+  
+  #app { height: 100dvh; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; position: relative; overflow: hidden; }
+  
+  /* Scrollable content area */
+  .screen { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+  .screen::-webkit-scrollbar { display: none; }
+  
+  /* Header */
+  .topbar { padding: calc(var(--safe-top) + 12px) 20px 12px; background: var(--bg); border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .topbar-title { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .topbar-subtitle { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .topbar-badge { background: var(--accent); color: #000; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; font-family: var(--mono); }
+  
+  /* Nav */
+  .nav { display: flex; background: var(--surface); border-top: 0.5px solid var(--border); padding-bottom: var(--safe-bottom); flex-shrink: 0; }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 8px; border: none; background: none; color: var(--text3); font-family: var(--font); font-size: 10px; font-weight: 500; letter-spacing: 0.3px; cursor: pointer; transition: color 0.15s; position: relative; }
+  .nav-btn.active { color: var(--accent); }
+  .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-dot { width: 4px; height: 4px; background: var(--accent); border-radius: 50%; position: absolute; top: 8px; right: calc(50% - 14px); }
+  
+  /* Cards */
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 0 16px 12px; }
+  .card-inner { padding: 14px 14px 12px; flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  
+  /* Exercise card: image full-height left, content right */
+  .ex-card { display: flex; align-items: stretch; min-height: 110px; }
+  .ex-img { width: 96px; flex-shrink: 0; background: var(--surface2); position: relative; overflow: hidden; border-right: 0.5px solid var(--border); }
+  .ex-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+  .ex-img canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .ex-img.completed-img { opacity: 0.35; }
+
+  /* Section headers */
+  .section-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 10px; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+  .section-action { font-size: 13px; color: var(--accent); font-weight: 500; cursor: pointer; }
+
+  /* Legacy ex-row (used in suggest/library) */
+  .ex-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+  .ex-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .ex-row:first-child { padding-top: 0; }
+  .ex-thumb { width: 52px; height: 52px; border-radius: 10px; background: var(--surface2); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 26px; position: relative; }
+  .ex-thumb canvas { position: absolute; width: 100%; height: 100%; }
+  .ex-info { flex: 1; min-width: 0; }
+  .ex-name { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ex-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .ex-tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 6px; }
+  .tag-cardio { background: rgba(74,176,255,0.15); color: var(--blue); }
+  .tag-legs { background: rgba(255,159,74,0.15); color: var(--orange); }
+  .tag-back { background: rgba(200,255,0,0.12); color: var(--accent); }
+  .tag-chest { background: rgba(255,68,68,0.12); color: var(--red); }
+  .tag-arms { background: rgba(76,255,145,0.12); color: var(--green); }
+  .tag-core { background: rgba(179,128,255,0.15); color: #b380ff; }
+  .tag-shoulders { background: rgba(255,210,74,0.12); color: #ffd24a; }
+  
+  /* Weight control */
+  .weight-ctrl { display: flex; align-items: center; gap: 8px; }
+  .wc-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.1s, border-color 0.1s; user-select: none; -webkit-user-select: none; }
+  .wc-btn:active { background: var(--surface3); }
+  .wc-val { font-size: 15px; font-weight: 600; font-family: var(--mono); min-width: 54px; text-align: center; }
+  .wc-unit { font-size: 11px; color: var(--text3); }
+  
+  /* Set pills */
+  .sets-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .set-pill { height: 32px; min-width: 56px; padding: 0 10px; border-radius: 20px; border: 1px solid var(--border2); background: var(--surface2); font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; color: var(--text2); gap: 4px; font-family: var(--mono); }
+  .set-pill.done { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .set-pill.skipped { background: var(--red-dim); border-color: var(--red); color: var(--red); text-decoration: line-through; }
+  .set-check { font-size: 11px; }
+  
+  /* Suggestion card */
+  .suggest-card { background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius); margin: 0 16px 12px; position: relative; overflow: hidden; }
+  .suggest-card::after { content: 'NEW'; position: absolute; top: 10px; right: 12px; font-size: 9px; font-weight: 700; background: var(--accent); color: #000; padding: 2px 6px; border-radius: 4px; letter-spacing: 1px; pointer-events: none; }
+  .suggest-label { font-size: 11px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .suggest-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .btn { height: 40px; border-radius: 10px; border: none; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.15s, transform 0.1s; }
+  .btn:active { transform: scale(0.97); opacity: 0.85; }
+  .btn-accept { flex: 1; background: var(--accent); color: #000; }
+  .btn-reject { width: 40px; background: var(--surface2); color: var(--red); border: 1px solid var(--red-dim); }
+  .btn-skip { flex: 1; background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); }
+  .btn-primary { width: 100%; background: var(--accent); color: #000; height: 50px; border-radius: var(--radius); font-size: 16px; }
+  .btn-outline { width: 100%; background: transparent; color: var(--text); height: 44px; border-radius: var(--radius); border: 1px solid var(--border2); font-size: 14px; }
+  
+  /* Progress bar */
+  .prog-bar { height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; margin: 8px 0; }
+  .prog-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+  
+  /* Stats grid */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 16px 12px; }
+  .stat-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; }
+  .stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 6px; }
+  .stat-val { font-size: 28px; font-weight: 300; font-family: var(--mono); color: var(--text); line-height: 1; }
+  .stat-unit { font-size: 13px; color: var(--text3); margin-left: 3px; }
+  
+  /* History item */
+  .hist-item { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 0.5px solid var(--border); }
+  .hist-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .hist-dot.rest { background: var(--text3); }
+  .hist-info { flex: 1; }
+  .hist-title { font-size: 15px; font-weight: 500; }
+  .hist-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .hist-tag { font-size: 12px; font-family: var(--mono); color: var(--accent); }
+  
+  /* Page areas */
+  .page-pad { padding: 8px 0 20px; }
+  .spacer { height: 20px; }
+  
+  /* Hero section */
+  .hero { padding: 20px 20px 0; }
+  .hero-greeting { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+  .hero-title { font-size: 26px; font-weight: 300; letter-spacing: -0.5px; line-height: 1.2; }
+  .hero-title strong { font-weight: 600; color: var(--accent); }
+  
+  /* Workout active state */
+  .completed-card .ex-name { color: var(--text3); text-decoration: line-through; }
+  .completed-card .card-inner { opacity: 0.55; }
+  
+  /* Muscle map illustration */
+  .muscle-vis { width: 100%; height: 120px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 10px; background: var(--surface2); margin-bottom: 12px; }
+  
+  /* Toggle */
+  .toggle-row { display: flex; background: var(--surface2); border-radius: 10px; padding: 3px; margin: 0 16px 16px; }
+  .toggle-opt { flex: 1; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; color: var(--text2); }
+  .toggle-opt.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+  
+  /* Empty state */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 14px; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  
+  /* Modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: flex-end; }
+  .modal { background: var(--surface); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + var(--safe-bottom)); width: 100%; max-height: 80dvh; overflow-y: auto; }
+  .modal-handle { width: 40px; height: 4px; background: var(--surface3); border-radius: 2px; margin: 0 auto 20px; }
+  .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+  .hidden { display: none !important; }
+
+  /* Chip row */
+  .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .chip { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border2); color: var(--text2); transition: all 0.15s; }
+  .chip.on { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  /* Notification toast */
+  .toast { position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface); border: 1px solid var(--border2); border-radius: 24px; padding: 10px 20px; font-size: 13px; font-weight: 500; z-index: 200; opacity: 0; transition: all 0.3s; white-space: nowrap; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Card overflow menu button */
+  .card-menu-btn {
+    position: absolute; top: 6px; right: 6px;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+    border: 0.5px solid rgba(255,255,255,0.15);
+    color: #fff; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 10; line-height: 1;
+    letter-spacing: -1px; padding-bottom: 2px;
+  }
+  .card-menu-btn:active { background: rgba(0,0,0,0.8); }
+
+  /* Tappable empty image state */
+  .ex-img-empty { cursor: pointer; }
+  .ex-img-empty:active { opacity: 0.7; }
+  .ex-img-add-hint {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.25); gap: 2px; pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Image URL input sheet */
+  .img-sheet {
+    position: fixed; inset: 0; z-index: 150;
+    display: flex; align-items: flex-end;
+    background: rgba(0,0,0,0.65);
+  }
+  .img-sheet-inner {
+    width: 100%; background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px calc(28px + var(--safe-bottom));
+  }
+  .img-sheet-handle { width: 40px; height: 4px; background: var(--surface3); border-radius: 2px; margin: 0 auto 18px; }
+  .img-sheet-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .img-sheet-name { font-size: 17px; font-weight: 600; margin-bottom: 16px; }
+  .img-sheet-field { display: flex; gap: 10px; align-items: center; }
+  .img-sheet-field input {
+    flex: 1; height: 46px; border-radius: 12px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--text); font-family: var(--font); font-size: 14px;
+    padding: 0 14px; outline: none;
+  }
+  .img-sheet-field input:focus { border-color: var(--accent); }
+  .img-sheet-save {
+    height: 46px; padding: 0 18px; border-radius: 12px;
+    background: var(--accent); color: #000; font-family: var(--font);
+    font-size: 14px; font-weight: 700; border: none; cursor: pointer;
+    flex-shrink: 0;
+  }
+  .img-sheet-save:active { opacity: 0.8; }
+  .img-sheet-actions { display: flex; gap: 10px; margin-top: 10px; }
+  .img-sheet-clear {
+    flex: 1; height: 40px; border-radius: 10px;
+    background: var(--red-dim); color: var(--red);
+    border: 1px solid rgba(255,68,68,0.25);
+    font-family: var(--font); font-size: 13px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .img-sheet-cancel {
+    flex: 1; height: 40px; border-radius: 10px;
+    background: var(--surface2); color: var(--text2);
+    border: 1px solid var(--border2);
+    font-family: var(--font); font-size: 13px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Contextual card menu items */
+  .cmenu-item {
+    padding: 12px 16px; font-size: 14px; font-weight: 500;
+    color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 10px;
+  }
+  .cmenu-item:active { background: var(--surface2); }
+  .cmenu-danger { color: var(--red); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar" class="topbar">
+    <div>
+      <div class="topbar-title" id="page-title">Today's Session</div>
+      <div class="topbar-subtitle" id="page-sub">Wednesday · Full Body</div>
+    </div>
+    <div class="topbar-badge" id="top-badge">0 / 14</div>
+  </div>
+
+  <div class="screen" id="main-screen">
+    <!-- Content injected by JS -->
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('workout')" id="nav-workout">
+      <span class="nav-icon">⚡</span>WORKOUT
+    </button>
+    <button class="nav-btn" onclick="showPage('suggest')" id="nav-suggest">
+      <span class="nav-icon">✦</span>SUGGEST
+      <span class="nav-dot" id="suggest-dot"></span>
+    </button>
+    <button class="nav-btn" onclick="showPage('history')" id="nav-history">
+      <span class="nav-icon">◷</span>HISTORY
+    </button>
+    <button class="nav-btn" onclick="showPage('progress')" id="nav-progress">
+      <span class="nav-icon">◈</span>PROGRESS
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Image URL Sheet -->
+<div class="img-sheet hidden" id="img-sheet" onclick="if(event.target===this)hideImageSheet()">
+  <div class="img-sheet-inner">
+    <div class="img-sheet-handle"></div>
+    <div class="img-sheet-label">Exercise image</div>
+    <div class="img-sheet-name" id="img-sheet-title"></div>
+    <div class="img-sheet-field">
+      <input type="url" id="img-url-input" placeholder="Paste image URL here…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="img-sheet-save" onclick="saveImageSheet()">Save</button>
+    </div>
+    <div class="img-sheet-actions">
+      <button class="img-sheet-cancel" onclick="hideImageSheet()">Cancel</button>
+      <button class="img-sheet-clear" id="img-sheet-clear" onclick="clearImageSheet()">✕ Remove image</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── EXERCISE DATABASE ───────────────────────────────────────────────────────
+// Curated machine/cable station exercises, no barbell/band/bodyweight
+const EXERCISE_DB = {
+  cardio: [
+    { id:'c1', name:'Treadmill Walk/Run', muscle:'Cardio', emoji:'🏃', sets:1, reps:null, weight:0, type:'cardio', note:'1km warm-up', desc:'Adjustable speed/incline treadmill' },
+    { id:'c2', name:'Elliptical Trainer', muscle:'Cardio', emoji:'🔄', sets:1, reps:null, weight:0, type:'cardio', note:'10–15 min', desc:'Low-impact full-body cardio' },
+    { id:'c3', name:'Stationary Bike', muscle:'Cardio', emoji:'🚴', sets:1, reps:null, weight:0, type:'cardio', note:'10–15 min', desc:'Upright or recumbent bike' },
+    { id:'c4', name:'Rowing Machine', muscle:'Cardio', emoji:'🚣', sets:1, reps:null, weight:0, type:'cardio', note:'10–15 min', desc:'Full-body low-impact cardio' },
+    { id:'c5', name:'Stair Climber', muscle:'Cardio', emoji:'🪜', sets:1, reps:null, weight:0, type:'cardio', note:'10 min', desc:'Upright stair stepping machine' },
+  ],
+  legs: [
+    { id:'l1', name:'Leg Press Machine', muscle:'Legs', emoji:'🦵', sets:3, reps:12, weight:70, type:'weight', desc:'Seated plate-loaded leg press' },
+    { id:'l2', name:'Leg Extension Machine', muscle:'Legs (Quads)', emoji:'🦵', sets:3, reps:12, weight:25, type:'weight', desc:'Seated quadriceps isolation' },
+    { id:'l3', name:'Leg Curl Machine', muscle:'Legs (Hamstrings)', emoji:'🦵', sets:3, reps:12, weight:25, type:'weight', desc:'Lying or seated hamstring curl' },
+    { id:'l4', name:'Hip Adduction Machine', muscle:'Inner Thighs', emoji:'◀▶', sets:3, reps:12, weight:35, type:'weight', desc:'Seated inner thigh squeeze' },
+    { id:'l5', name:'Hip Abduction Machine', muscle:'Outer Thighs', emoji:'▶◀', sets:3, reps:12, weight:22.5, type:'weight', desc:'Seated outer thigh press' },
+    { id:'l6', name:'Seated Calf Raise', muscle:'Calves', emoji:'🦶', sets:3, reps:15, weight:30, type:'weight', desc:'Seated machine calf raise' },
+    { id:'l7', name:'Standing Leg Curl', muscle:'Legs (Hamstrings)', emoji:'🦵', sets:3, reps:12, weight:20, type:'weight', desc:'Standing single-leg hamstring curl' },
+    { id:'l8', name:'Hack Squat Machine', muscle:'Legs (Quads)', emoji:'🔧', sets:3, reps:10, weight:50, type:'weight', desc:'Machine squat with back support' },
+    { id:'l9', name:'Glute Kickback Machine', muscle:'Glutes', emoji:'🍑', sets:3, reps:12, weight:20, type:'weight', desc:'Cable/machine glute isolation' },
+    { id:'l10', name:'Hip Thrust Machine', muscle:'Glutes', emoji:'🍑', sets:3, reps:12, weight:40, type:'weight', desc:'Padded hip extension machine' },
+  ],
+  back: [
+    { id:'b1', name:'Lat Pulldown Machine', muscle:'Back (Lats)', emoji:'🏋', sets:4, reps:12, weight:35, type:'weight', desc:'Cable pulldown — wide grip bar' },
+    { id:'b2', name:'Seated Cable Row', muscle:'Back (Mid)', emoji:'🏋', sets:3, reps:12, weight:40, type:'weight', desc:'Cable station with V-bar handle' },
+    { id:'b3', name:'Machine Row', muscle:'Back (Mid)', emoji:'🏋', sets:3, reps:12, weight:40, type:'weight', desc:'Chest-supported row machine' },
+    { id:'b4', name:'Cable Straight-Arm Pulldown', muscle:'Back (Lats)', emoji:'↓', sets:3, reps:12, weight:25, type:'weight', desc:'Cable station with rope handle' },
+    { id:'b5', name:'Rear Delt Fly Machine', muscle:'Back (Rear Delt)', emoji:'🔙', sets:3, reps:15, weight:15, type:'weight', desc:'Pec-deck / rear delt setting' },
+    { id:'b6', name:'Machine Pullover', muscle:'Back (Lats)', emoji:'🏋', sets:3, reps:12, weight:30, type:'weight', desc:'Pullover machine — lat stretch' },
+    { id:'b7', name:'High Cable Row', muscle:'Back (Upper)', emoji:'↗', sets:3, reps:12, weight:30, type:'weight', desc:'Cable station — wide grip' },
+    { id:'b8', name:'Single-Arm Cable Row', muscle:'Back (Mid)', emoji:'🏋', sets:3, reps:12, weight:20, type:'weight', desc:'Cable station with D-handle' },
+  ],
+  chest: [
+    { id:'ch1', name:'Machine Chest Press', muscle:'Chest', emoji:'💪', sets:4, reps:12, weight:30, type:'weight', desc:'Chest press machine' },
+    { id:'ch2', name:'Pec Deck / Machine Fly', muscle:'Chest', emoji:'🦋', sets:3, reps:12, weight:15, type:'weight', desc:'Pec deck fly machine' },
+    { id:'ch3', name:'Cable Chest Fly', muscle:'Chest', emoji:'🦋', sets:3, reps:12, weight:12.5, type:'weight', desc:'Cable station — D-handles' },
+    { id:'ch4', name:'Incline Machine Press', muscle:'Chest (Upper)', emoji:'📐', sets:3, reps:12, weight:25, type:'weight', desc:'Incline chest press machine' },
+    { id:'ch5', name:'Low Cable Fly', muscle:'Chest (Upper)', emoji:'↗', sets:3, reps:12, weight:10, type:'weight', desc:'Cable station — low pulley' },
+  ],
+  biceps: [
+    { id:'bi1', name:'Machine Bicep Curl', muscle:'Biceps', emoji:'💪', sets:3, reps:12, weight:10, type:'weight', desc:'Preacher curl machine' },
+    { id:'bi2', name:'Cable Curl', muscle:'Biceps', emoji:'💪', sets:3, reps:12, weight:15, type:'weight', desc:'Cable station — straight bar' },
+    { id:'bi3', name:'Cable Hammer Curl', muscle:'Biceps', emoji:'🔨', sets:3, reps:12, weight:12, type:'weight', desc:'Cable station — rope handle' },
+    { id:'bi4', name:'High Cable Curl', muscle:'Biceps', emoji:'💪', sets:3, reps:12, weight:10, type:'weight', desc:'Cable station — high pulley' },
+    { id:'bi5', name:'Dumbbell Curl', muscle:'Biceps', emoji:'💪', sets:3, reps:12, weight:8, type:'weight', desc:'Dumbbell — no plates needed' },
+  ],
+  triceps: [
+    { id:'tr1', name:'Machine Tricep Extension', muscle:'Triceps', emoji:'🔱', sets:3, reps:12, weight:27.5, type:'weight', desc:'Tricep extension machine' },
+    { id:'tr2', name:'Cable Tricep Pushdown', muscle:'Triceps', emoji:'⬇', sets:3, reps:12, weight:25, type:'weight', desc:'Cable station — straight bar' },
+    { id:'tr3', name:'Rope Tricep Pushdown', muscle:'Triceps', emoji:'🪢', sets:3, reps:12, weight:20, type:'weight', desc:'Cable station — rope handle' },
+    { id:'tr4', name:'Overhead Cable Extension', muscle:'Triceps', emoji:'⬆', sets:3, reps:12, weight:15, type:'weight', desc:'Cable station — rope overhead' },
+  ],
+  shoulders: [
+    { id:'sh1', name:'Machine Shoulder Press', muscle:'Shoulders', emoji:'🏔', sets:3, reps:12, weight:20, type:'weight', desc:'Seated shoulder press machine' },
+    { id:'sh2', name:'Cable Lateral Raise', muscle:'Shoulders (Side)', emoji:'↔', sets:3, reps:12, weight:7.5, type:'weight', desc:'Cable station — D-handle' },
+    { id:'sh3', name:'Dumbbell Lateral Raise', muscle:'Shoulders (Side)', emoji:'✈', sets:3, reps:12, weight:6, type:'weight', desc:'Dumbbells — no plates' },
+    { id:'sh4', name:'Machine Lateral Raise', muscle:'Shoulders (Side)', emoji:'↔', sets:3, reps:12, weight:10, type:'weight', desc:'Lateral raise machine' },
+    { id:'sh5', name:'Cable Front Raise', muscle:'Shoulders (Front)', emoji:'⬆', sets:3, reps:12, weight:10, type:'weight', desc:'Cable station — low pulley' },
+    { id:'sh6', name:'Face Pull', muscle:'Shoulders/Rear Delt', emoji:'🔙', sets:3, reps:15, weight:15, type:'weight', desc:'Cable station — rope handle' },
+  ],
+  core: [
+    { id:'co1', name:'Ab Curl Machine', muscle:'Core (Abs)', emoji:'⚡', sets:3, reps:12, weight:22.5, type:'weight', desc:'Abdominal crunch machine' },
+    { id:'co2', name:'Cable Crunch', muscle:'Core (Abs)', emoji:'⬇', sets:3, reps:12, weight:20, type:'weight', desc:'Cable station — rope overhead' },
+    { id:'co3', name:'Oblique Twist Machine', muscle:'Core (Obliques)', emoji:'🔄', sets:3, reps:12, weight:15, type:'weight', desc:'Rotary torso machine' },
+    { id:'co4', name:'Back Extension Machine', muscle:'Core (Lower Back)', emoji:'🔙', sets:3, reps:12, weight:0, type:'weight', desc:'Hyperextension machine' },
+    { id:'co5', name:'Cable Woodchop', muscle:'Core (Obliques)', emoji:'🪓', sets:3, reps:12, weight:15, type:'weight', desc:'Cable station — D-handle' },
+  ],
+};
+
+// Map muscle groups for exercise suggestions
+const MUSCLE_ALTERNATIVES = {
+  'cardio': EXERCISE_DB.cardio,
+  'legs': [...EXERCISE_DB.legs],
+  'back': [...EXERCISE_DB.back],
+  'chest': [...EXERCISE_DB.chest],
+  'biceps': [...EXERCISE_DB.biceps],
+  'triceps': [...EXERCISE_DB.triceps],
+  'shoulders': [...EXERCISE_DB.shoulders],
+  'core': [...EXERCISE_DB.core],
+};
+
+function getMuscleGroup(ex) {
+  const n = ex.name.toLowerCase();
+  if (ex.type === 'cardio') return 'cardio';
+  if (n.includes('leg') || n.includes('adduct') || n.includes('abduct') || n.includes('glute') || n.includes('hip') || n.includes('calf') || n.includes('squat') || n.includes('hamstring') || n.includes('quad')) return 'legs';
+  if (n.includes('pulldown') || n.includes('pull-down') || n.includes('row') || n.includes('pullover') || n.includes('lat ') || n.includes('rear delt fly') || n.includes('straight-arm')) return 'back';
+  if (n.includes('chest') || n.includes('pec') || n.includes('fly') || n.includes('press') && !n.includes('shoulder') && !n.includes('tricep') && !n.includes('leg')) return 'chest';
+  if (n.includes('bicep') || n.includes('curl') && !n.includes('leg') && !n.includes('tricep')) return 'biceps';
+  if (n.includes('tricep') || n.includes('pushdown') || n.includes('extension') && !n.includes('leg') && !n.includes('hip') && !n.includes('back')) return 'triceps';
+  if (n.includes('shoulder') || n.includes('lateral raise') || n.includes('face pull') || n.includes('front raise')) return 'shoulders';
+  if (n.includes('ab') || n.includes('core') || n.includes('crunch') || n.includes('oblique') || n.includes('back extension') || n.includes('woodchop')) return 'core';
+  return 'back'; // fallback
+}
+
+// ─── USER IMAGE STORE ─────────────────────────────────────────────────────────
+// Images are saved by exercise ID in state.userImages = { 'w1': 'https://...', ... }
+// Users set them by tapping the placeholder or via the card overflow menu.
+
+function getImgSrc(exId) {
+  return (state.userImages && state.userImages[exId]) || null;
+}
+
+function setImgSrc(exId, url) {
+  if (!state.userImages) state.userImages = {};
+  if (url && url.trim()) {
+    state.userImages[exId] = url.trim();
+  } else {
+    delete state.userImages[exId];
+  }
+  saveState();
+}
+
+// Show the URL input sheet for a given exercise ID
+function showImageSheet(exId, exName) {
+  const current = getImgSrc(exId) || '';
+  const sheet = document.getElementById('img-sheet');
+  const input = document.getElementById('img-url-input');
+  const title = document.getElementById('img-sheet-title');
+  const clearBtn = document.getElementById('img-sheet-clear');
+  title.textContent = exName;
+  input.value = current;
+  clearBtn.style.display = current ? 'flex' : 'none';
+  sheet.dataset.exid = exId;
+  sheet.classList.remove('hidden');
+  setTimeout(() => input.focus(), 120);
+}
+
+function hideImageSheet() {
+  document.getElementById('img-sheet').classList.add('hidden');
+  document.getElementById('img-url-input').value = '';
+}
+
+function saveImageSheet() {
+  const sheet = document.getElementById('img-sheet');
+  const exId = sheet.dataset.exid;
+  const url = document.getElementById('img-url-input').value.trim();
+  setImgSrc(exId, url);
+  hideImageSheet();
+  showToast(url ? '✓ Image saved' : 'Image removed');
+  showPage(state.page);
+}
+
+function clearImageSheet() {
+  const sheet = document.getElementById('img-sheet');
+  const exId = sheet.dataset.exid;
+  setImgSrc(exId, '');
+  hideImageSheet();
+  showToast('Image removed');
+  showPage(state.page);
+}
+
+// Overflow menu per card
+function showCardMenu(exId, exName, evt) {
+  evt.stopPropagation();
+  const existing = document.getElementById('card-menu');
+  if (existing) existing.remove();
+  const menu = document.createElement('div');
+  menu.id = 'card-menu';
+  menu.style.cssText = `
+    position:fixed; z-index:300; background:var(--surface);
+    border:0.5px solid var(--border2); border-radius:12px;
+    padding:6px 0; min-width:180px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  `;
+  const hasImg = !!getImgSrc(exId);
+  menu.innerHTML = `
+    <div class="cmenu-item" onclick="showImageSheet('${exId}','${exName.replace(/'/g,"\\'")}');document.getElementById('card-menu').remove()">
+      <span style="font-size:15px;">🖼</span> ${hasImg ? 'Change image' : 'Add image'}
+    </div>
+    ${hasImg ? `<div class="cmenu-item cmenu-danger" onclick="setImgSrc('${exId}','');showToast('Image removed');document.getElementById('card-menu').remove();showPage(state.page)">
+      <span style="font-size:15px;">✕</span> Remove image
+    </div>` : ''}
+  `;
+  // Position near the tap point
+  const rect = evt.currentTarget.getBoundingClientRect();
+  const menuRight = 20;
+  menu.style.right = menuRight + 'px';
+  menu.style.top = Math.min(rect.bottom + 4, window.innerHeight - 120) + 'px';
+  document.body.appendChild(menu);
+  // Dismiss on outside tap
+  const dismiss = (e) => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('pointerdown', dismiss); } };
+  setTimeout(() => document.addEventListener('pointerdown', dismiss), 50);
+}
+
+
+
+// ─── BASE WORKOUT (from your Excel) ──────────────────────────────────────────
+const BASE_WORKOUT = [
+  { id:'w0',  name:'1km Treadmill Run',        muscle:'Cardio',                emoji:'🏃', sets:1,  reps:null, weight:0,    type:'cardio',  desc:'Warm-up cardio' },
+  { id:'w1',  name:'Leg Press Machine',         muscle:'Legs',                  emoji:'🦵', sets:3,  reps:12,   weight:70,   type:'weight',  desc:'Seated plate-loaded leg press' },
+  { id:'w2',  name:'Lat Pulldown Machine',      muscle:'Back (Lats)',           emoji:'🏋', sets:4,  reps:12,   weight:35,   type:'weight',  desc:'Wide grip cable pulldown' },
+  { id:'w3',  name:'Machine Row',               muscle:'Back (Mid)',            emoji:'🏋', sets:3,  reps:12,   weight:40,   type:'weight',  desc:'Chest-supported row machine' },
+  { id:'w4',  name:'Machine Chest Press',       muscle:'Chest',                 emoji:'💪', sets:4,  reps:12,   weight:30,   type:'weight',  desc:'Chest press machine' },
+  { id:'w5',  name:'Machine Leg Extension',     muscle:'Legs (Quads)',          emoji:'🦵', sets:3,  reps:12,   weight:25,   type:'weight',  desc:'Seated quad isolation' },
+  { id:'w6',  name:'Machine Leg Curl',          muscle:'Legs (Hamstrings)',     emoji:'🦵', sets:3,  reps:12,   weight:25,   type:'weight',  desc:'Lying hamstring curl' },
+  { id:'w7',  name:'Machine Adduction',         muscle:'Inner Thighs',          emoji:'◀▶', sets:3,  reps:12,   weight:35,   type:'weight',  desc:'Seated inner thigh machine' },
+  { id:'w8',  name:'Machine Abduction',         muscle:'Outer Thighs',          emoji:'▶◀', sets:3,  reps:12,   weight:22.5, type:'weight',  desc:'Seated outer thigh machine' },
+  { id:'w9',  name:'Machine Fly',               muscle:'Chest',                 emoji:'🦋', sets:3,  reps:12,   weight:15,   type:'weight',  desc:'Pec deck fly machine' },
+  { id:'w10', name:'Machine Bicep Curl',        muscle:'Biceps',                emoji:'💪', sets:3,  reps:12,   weight:10,   type:'weight',  desc:'Preacher curl machine' },
+  { id:'w11', name:'Dumbbell Lateral Raise',    muscle:'Shoulders (Side)',      emoji:'✈', sets:3,  reps:12,   weight:6,    type:'weight',  desc:'Fixed dumbbells — no plates' },
+  { id:'w12', name:'Machine Tricep Extension',  muscle:'Triceps',               emoji:'🔱', sets:3,  reps:12,   weight:27.5, type:'weight',  desc:'Tricep extension machine' },
+  { id:'w13', name:'Ab Curl Machine',           muscle:'Core (Abs)',            emoji:'⚡', sets:3,  reps:12,   weight:22.5, type:'weight',  desc:'Abdominal crunch machine' },
+];
+
+function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem('gymkit_state') || 'null'); } catch(e) { return null; }
+}
+function saveState() {
+  try { localStorage.setItem('gymkit_state', JSON.stringify(state)); } catch(e) {}
+}
+
+let state = loadState() || {
+  page: 'workout',
+  sessions: [],
+  weights: {},
+  userImages: {},
+  currentSession: null,
+  pendingSuggestions: [],
+};
+
+// Generate today's session if needed
+function getTodayLabel() {
+  const d = new Date();
+  return d.toDateString();
+}
+
+function getOrCreateSession() {
+  if (!state.currentSession || state.currentSession.date !== getTodayLabel()) {
+    const exercises = deepClone(BASE_WORKOUT).map(ex => {
+      // Apply saved weight preferences
+      if (state.weights[ex.id]) ex.weight = state.weights[ex.id];
+      // Build set statuses: 'pending', 'done', 'skipped'
+      ex.setStatus = Array(ex.type === 'cardio' ? 1 : ex.sets).fill('pending');
+      ex.accepted = true; // visible in session
+      return ex;
+    });
+    state.currentSession = {
+      date: getTodayLabel(),
+      exercises,
+      startTime: null,
+      endTime: null,
+    };
+    saveState();
+  }
+  return state.currentSession;
+}
+
+// Generate suggestions based on the current session
+function generateSuggestions() {
+  if (state.pendingSuggestions && state.pendingSuggestions.length > 0) return;
+  const session = getOrCreateSession();
+  const suggestions = [];
+  // Pick 2-3 random exercises from the session to suggest replacements for
+  const candidates = session.exercises.filter(e => e.type !== 'cardio').slice(0, 12);
+  const picked = candidates.sort(() => 0.5 - Math.random()).slice(0, 3);
+  for (const ex of picked) {
+    const group = getMuscleGroup(ex);
+    const pool = MUSCLE_ALTERNATIVES[group] || [];
+    const alts = pool.filter(a => a.id !== ex.id && a.name !== ex.name);
+    if (alts.length === 0) continue;
+    const alt = alts[Math.floor(Math.random() * alts.length)];
+    suggestions.push({
+      replaceId: ex.id,
+      replaceName: ex.name,
+      suggestion: deepClone(alt),
+      reason: getSuggestionReason(group),
+    });
+  }
+  state.pendingSuggestions = suggestions;
+  saveState();
+}
+
+function getSuggestionReason(group) {
+  const reasons = {
+    legs: ['Targets glutes more directly', 'Changes the range of motion', 'Isolates a different quad angle', 'Focuses more on hamstrings'],
+    back: ['Hits upper lats differently', 'More scapular retraction', 'Changes grip position for variety', 'Engages mid-back more'],
+    chest: ['Increases upper chest activation', 'Better mind-muscle connection', 'Different pressing angle', 'More stretch at bottom'],
+    biceps: ['Neutral grip variation', 'Full range of motion', 'Peak contraction focus', 'Different angle of pull'],
+    triceps: ['Long-head stretch', 'Lateral-head focus', 'Full extension variation', 'Changes joint angle'],
+    shoulders: ['Better lateral delt isolation', 'Improves shoulder stability', 'Rotator cuff engagement', 'Adds rear delt work'],
+    core: ['Hits obliques more', 'Lower ab focus', 'Spinal erector engagement', 'Functional rotational movement'],
+    cardio: ['Less joint impact', 'Full-body warmup', 'Engages core while warming up', 'Different intensity curve'],
+  };
+  const opts = reasons[group] || ['Variation for progression'];
+  return opts[Math.floor(Math.random() * opts.length)];
+}
+
+// ─── MUSCLE TAG ───────────────────────────────────────────────────────────────
+function muscleTag(muscle) {
+  const m = muscle.toLowerCase();
+  if (m.includes('cardio')) return '<span class="ex-tag tag-cardio">Cardio</span>';
+  if (m.includes('leg') || m.includes('thigh') || m.includes('glute') || m.includes('calf') || m.includes('hamstring') || m.includes('quad')) return '<span class="ex-tag tag-legs">Legs</span>';
+  if (m.includes('back') || m.includes('lat')) return '<span class="ex-tag tag-back">Back</span>';
+  if (m.includes('chest')) return '<span class="ex-tag tag-chest">Chest</span>';
+  if (m.includes('bicep') || m.includes('tricep') || m.includes('arm')) return '<span class="ex-tag tag-arms">Arms</span>';
+  if (m.includes('core') || m.includes('ab')) return '<span class="ex-tag tag-core">Core</span>';
+  if (m.includes('shoulder')) return '<span class="ex-tag tag-shoulders">Shoulders</span>';
+  return '';
+}
+
+// ─── EXERCISE ILLUSTRATION ────────────────────────────────────────────────────
+function drawExerciseThumb(canvas, emoji, muscle) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const colors = {
+    cardio: ['#0d1f2d','#1a4a6b'], legs: ['#1a0d00','#4a2800'],
+    back:   ['#001a0d','#003d1f'], chest: ['#1a0000','#4a0f0f'],
+    biceps: ['#001a0d','#004a1f'], triceps: ['#001a0d','#004a1f'],
+    shoulders: ['#0d0d1a','#25254a'], core: ['#100014','#2d0040'], default: ['#111','#222'],
+  };
+  const group = getMuscleGroup({name: muscle.toLowerCase(), type: muscle.toLowerCase().includes('cardio') ? 'cardio' : 'weight'});
+  const [c1, c2] = colors[group] || colors.default;
+  // Gradient background
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, c2);
+  grad.addColorStop(1, c1);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+  // Subtle grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let y = 0; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+  for (let x = 0; x < w; x += 20) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+  // Big emoji centered
+  ctx.font = `${Math.round(h * 0.52)}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, w / 2, h / 2 + 2);
+}
+
+// ─── RENDER FUNCTIONS ─────────────────────────────────────────────────────────
+function renderExImg(ex, allDone) {
+  const src = getImgSrc(ex.id);
+  const completedCls = allDone ? 'completed-img' : '';
+  // Overflow menu button — always visible top-right of card (outside image div, in card header)
+  const menuBtn = `<button class="card-menu-btn" onclick="showCardMenu('${ex.id}','${ex.name.replace(/'/g,"\\'")}',event)" aria-label="Exercise options">···</button>`;
+  if (src) {
+    return `<div class="ex-img ${completedCls}">
+      <img src="${src}" alt="${ex.name}" loading="lazy"
+        onerror="this.style.display='none';var c=document.createElement('canvas');c.width=96;c.height=120;this.parentNode.appendChild(c);drawExerciseThumb(c,'${ex.emoji.replace(/'/g,"\\'")}','${ex.muscle}');">
+      ${menuBtn}
+    </div>`;
+  }
+  // No image yet — show tappable placeholder
+  return `<div class="ex-img ex-img-empty ${completedCls}" onclick="showImageSheet('${ex.id}','${ex.name.replace(/'/g,"\\'")}')">
+    <canvas id="cvs-${ex.id}" width="96" height="120"></canvas>
+    <div class="ex-img-add-hint">
+      <span style="font-size:18px;line-height:1;">＋</span>
+      <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-top:2px;">Image</span>
+    </div>
+    ${menuBtn}
+  </div>`;
+}
+
+function renderSetPills(ex, sessionEx) {
+  if (ex.type === 'cardio') {
+    const s = sessionEx.setStatus[0];
+    const cls = s === 'done' ? 'done' : s === 'skipped' ? 'skipped' : '';
+    return `<div class="sets-row"><span class="set-pill ${cls}" onclick="toggleSet('${ex.id}',0)" title="Tap to mark done/skip"><span class="set-check">${s==='done'?'✓':s==='skipped'?'✗':'▷'}</span> 1km</span></div>`;
+  }
+  let pills = '<div class="sets-row">';
+  for (let i = 0; i < ex.sets; i++) {
+    const s = sessionEx.setStatus[i];
+    const cls = s === 'done' ? 'done' : s === 'skipped' ? 'skipped' : '';
+    const icon = s === 'done' ? '✓' : s === 'skipped' ? '✗' : String(i+1);
+    pills += `<span class="set-pill ${cls}" onclick="toggleSet('${ex.id}',${i})">${icon} × ${ex.reps}</span>`;
+  }
+  pills += '</div>';
+  return pills;
+}
+
+function renderWeightCtrl(ex) {
+  if (ex.type === 'cardio') return '';
+  return `<div class="weight-ctrl">
+    <div class="wc-btn" onclick="changeWeight('${ex.id}',-2.5)">−</div>
+    <div class="wc-val" id="wt-${ex.id}">${ex.weight}<span class="wc-unit"> kg</span></div>
+    <div class="wc-btn" onclick="changeWeight('${ex.id}',2.5)">+</div>
+  </div>`;
+}
+
+function renderWorkoutPage() {
+  const session = getOrCreateSession();
+  const total = session.exercises.filter(e => e.accepted).length;
+  const done = session.exercises.filter(e => e.accepted && e.setStatus.every(s => s !== 'pending')).length;
+  document.getElementById('page-title').textContent = "Today's Session";
+  document.getElementById('page-sub').textContent = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('top-badge').textContent = `${done} / ${total}`;
+
+  let html = `<div class="page-pad">`;
+  // Progress
+  html += `<div style="padding: 12px 20px 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:12px;color:var(--text2);">Session progress</span>
+      <span style="font-size:12px;font-family:var(--mono);color:var(--accent);">${Math.round(done/total*100)}%</span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${done/total*100}%"></div></div>
+  </div>`;
+
+  html += `<div class="section-head"><span class="section-title">Exercises</span><span class="section-action" onclick="showNewSession()">↺ New session</span></div>`;
+
+  for (const ex of session.exercises) {
+    if (!ex.accepted) continue;
+    const allDone = ex.setStatus.every(s => s !== 'pending');
+    const cardCls = allDone ? 'completed-card' : '';
+    html += `<div class="card ex-card ${cardCls}" style="margin-bottom:12px;">
+      ${renderExImg(ex, allDone)}
+      <div class="card-inner">
+        <div>
+          <div class="ex-name">${ex.name}${muscleTag(ex.muscle)}</div>
+          <div class="ex-meta" style="margin-top:3px;">${ex.type==='cardio' ? ex.desc : `${ex.sets} sets × ${ex.reps} reps`}</div>
+        </div>
+        ${renderWeightCtrl(ex)}
+        ${renderSetPills(ex, ex)}
+      </div>
+    </div>`;
+  }
+
+  if (done === total) {
+    html += `<div class="card" style="text-align:center;padding:20px;">
+      <div style="font-size:32px;margin-bottom:8px;">🎉</div>
+      <div style="font-size:17px;font-weight:600;color:var(--accent);">Session Complete!</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:6px;">All ${total} exercises done</div>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="finishSession()">Save & Finish</button>
+    </div>`;
+  }
+
+  html += `</div>`;
+  document.getElementById('main-screen').innerHTML = html;
+  // Draw canvases for exercises without custom images
+  for (const ex of session.exercises) {
+    const cvs = document.getElementById(`cvs-${ex.id}`);
+    if (cvs) { cvs.width = 96; cvs.height = 120; drawExerciseThumb(cvs, ex.emoji, ex.muscle); }
+  }
+}
+
+function renderSuggestPage() {
+  document.getElementById('page-title').textContent = 'Suggestions';
+  document.getElementById('page-sub').textContent = 'AI-powered alternatives from exercise library';
+  document.getElementById('top-badge').textContent = `${state.pendingSuggestions.length}`;
+  generateSuggestions();
+
+  let html = `<div class="page-pad">`;
+
+  if (state.pendingSuggestions.length === 0) {
+    html += `<div class="empty"><div class="empty-icon">✦</div>No new suggestions for today.<br>Complete some sets and check back!</div>`;
+  } else {
+    html += `<div class="section-head"><span class="section-title">Suggested Swaps</span></div>`;
+    html += `<div style="padding: 0 16px 12px; font-size: 13px; color: var(--text2);">Tap Accept to swap an exercise in today's session, or Reject to dismiss.</div>`;
+
+    for (let i = 0; i < state.pendingSuggestions.length; i++) {
+      const s = state.pendingSuggestions[i];
+      const alt = s.suggestion;
+      html += `<div class="suggest-card" style="padding:0;overflow:hidden;">
+        <div style="padding:12px 14px 8px 14px;border-bottom:0.5px solid rgba(200,255,0,0.2);">
+          <div class="suggest-label" style="margin-bottom:0;">Replace: ${s.replaceName}</div>
+        </div>
+        <div style="display:flex;align-items:stretch;min-height:90px;">
+          <div class="ex-img" style="width:80px;border-radius:0;font-size:36px;border-right:0.5px solid rgba(200,255,0,0.2);">${alt.emoji}</div>
+          <div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:6px;">
+            <div>
+              <div class="ex-name">${alt.name}${muscleTag(alt.muscle)}</div>
+              <div class="ex-meta" style="margin-top:3px;">${alt.sets} sets × ${alt.reps} reps · ${alt.weight} kg</div>
+            </div>
+            <div style="font-size:12px;color:var(--text2);background:var(--surface2);padding:6px 8px;border-radius:6px;">💡 ${s.reason}</div>
+          </div>
+        </div>
+        <div class="suggest-actions" style="padding:0 14px 14px;">
+          <button class="btn btn-accept" onclick="acceptSuggestion(${i})">✓ Accept</button>
+          <button class="btn btn-skip" onclick="keepExercise(${i})">Keep original</button>
+          <button class="btn btn-reject" onclick="rejectSuggestion(${i})">✕</button>
+        </div>
+      </div>`;
+    }
+  }
+
+  html += `<div class="section-head" style="margin-top:8px;"><span class="section-title">Browse Library</span></div>`;
+  html += `<div class="chip-row" style="padding:0 16px 4px;">`;
+  const groups = ['Cardio','Legs','Back','Chest','Biceps','Triceps','Shoulders','Core'];
+  for (const g of groups) {
+    html += `<div class="chip" onclick="filterLib('${g.toLowerCase()}')" id="chip-${g.toLowerCase()}">${g}</div>`;
+  }
+  html += `</div>`;
+
+  // Show all exercises from DB in library view
+  html += `<div id="lib-list">`;
+  const allEx = Object.values(EXERCISE_DB).flat();
+  for (const ex of allEx.slice(0, 20)) {
+    html += `<div class="hist-item">
+      <div style="font-size:24px;width:36px;text-align:center;">${ex.emoji}</div>
+      <div class="hist-info">
+        <div class="hist-title">${ex.name}${muscleTag(ex.muscle)}</div>
+        <div class="hist-sub">${ex.desc} · ${ex.type==='cardio'?'Cardio':`${ex.sets}×${ex.reps}`}</div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);">${ex.weight>0?ex.weight+'kg':''}</div>
+    </div>`;
+  }
+  html += `</div></div>`;
+  document.getElementById('main-screen').innerHTML = html;
+}
+
+function renderHistoryPage() {
+  document.getElementById('page-title').textContent = 'History';
+  document.getElementById('page-sub').textContent = 'Past workout sessions';
+  document.getElementById('top-badge').textContent = `${state.sessions.length}`;
+
+  let html = `<div class="page-pad">`;
+
+  // Stats at top
+  const totalSessions = state.sessions.length;
+  const totalSets = state.sessions.reduce((a, s) => a + (s.completedSets || 0), 0);
+  html += `<div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Sessions</div><div class="stat-val">${totalSessions}</div></div>
+    <div class="stat-card"><div class="stat-label">Total Sets</div><div class="stat-val">${totalSets}</div></div>
+  </div>`;
+
+  if (state.sessions.length === 0) {
+    html += `<div class="empty"><div class="empty-icon">◷</div>No completed sessions yet.<br>Finish your first workout!</div>`;
+  } else {
+    html += `<div class="section-head"><span class="section-title">Recent</span></div>`;
+    for (const s of [...state.sessions].reverse().slice(0, 20)) {
+      const pct = Math.round((s.completedSets / s.totalSets) * 100);
+      html += `<div class="hist-item">
+        <div class="hist-dot ${pct < 50 ? 'rest' : ''}"></div>
+        <div class="hist-info">
+          <div class="hist-title">${s.date}</div>
+          <div class="hist-sub">${s.completedSets} / ${s.totalSets} sets · ${s.exerciseCount} exercises</div>
+        </div>
+        <div class="hist-tag">${pct}%</div>
+      </div>`;
+    }
+  }
+
+  html += `</div>`;
+  document.getElementById('main-screen').innerHTML = html;
+}
+
+function renderProgressPage() {
+  document.getElementById('page-title').textContent = 'Progress';
+  document.getElementById('page-sub').textContent = 'Weight & performance tracking';
+  document.getElementById('top-badge').textContent = '↑';
+
+  const session = getOrCreateSession();
+  let html = `<div class="page-pad">`;
+  html += `<div class="section-head"><span class="section-title">Current Weights</span></div>`;
+
+  for (const ex of session.exercises) {
+    if (ex.type === 'cardio') continue;
+    html += `<div class="card ex-card" style="margin-bottom:12px;">
+      ${renderExImg(ex, false)}
+      <div class="card-inner" style="justify-content:center;">
+        <div>
+          <div class="ex-name" style="font-size:14px;">${ex.name}</div>
+          <div class="ex-meta" style="margin-top:2px;">${ex.muscle}</div>
+        </div>
+        ${renderWeightCtrl(ex)}
+      </div>
+    </div>`;
+  }
+
+  // Volume chart (simple ASCII/HTML bar)
+  if (state.sessions.length > 1) {
+    html += `<div class="section-head" style="margin-top:8px;"><span class="section-title">Session Volume</span></div>`;
+    html += `<div class="card">`;
+    const recent = state.sessions.slice(-7);
+    const maxSets = Math.max(...recent.map(s => s.completedSets));
+    for (const s of recent) {
+      const pct = maxSets > 0 ? (s.completedSets / maxSets) * 100 : 0;
+      const label = s.date.split(' ').slice(0,3).join(' ');
+      html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div style="font-size:11px;color:var(--text2);width:70px;flex-shrink:0;font-family:var(--mono);">${label}</div>
+        <div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:4px;"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);width:24px;text-align:right;">${s.completedSets}</div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+  document.getElementById('main-screen').innerHTML = html;
+  for (const ex of session.exercises) {
+    if (ex.type === 'cardio') continue;
+    const cvs = document.getElementById(`cvs-${ex.id}`);
+    if (cvs) { cvs.width = 96; cvs.height = 120; drawExerciseThumb(cvs, ex.emoji, ex.muscle); }
+  }
+}
+
+// ─── INTERACTIONS ─────────────────────────────────────────────────────────────
+function toggleSet(exId, setIdx) {
+  const session = getOrCreateSession();
+  const ex = session.exercises.find(e => e.id === exId);
+  if (!ex) return;
+  const cur = ex.setStatus[setIdx];
+  if (cur === 'pending') ex.setStatus[setIdx] = 'done';
+  else if (cur === 'done') ex.setStatus[setIdx] = 'skipped';
+  else ex.setStatus[setIdx] = 'pending';
+  saveState();
+  renderWorkoutPage();
+  showToast(ex.setStatus[setIdx] === 'done' ? '✓ Set complete' : ex.setStatus[setIdx] === 'skipped' ? 'Set skipped' : 'Set reset');
+}
+
+function changeWeight(exId, delta) {
+  const session = getOrCreateSession();
+  const ex = session.exercises.find(e => e.id === exId);
+  if (!ex) return;
+  ex.weight = Math.max(0, Math.round((ex.weight + delta) * 4) / 4);
+  state.weights[exId] = ex.weight;
+  saveState();
+  const el = document.getElementById(`wt-${exId}`);
+  if (el) el.innerHTML = `${ex.weight}<span class="wc-unit"> kg</span>`;
+  showToast(`${ex.weight} kg`);
+}
+
+function acceptSuggestion(idx) {
+  const s = state.pendingSuggestions[idx];
+  const session = getOrCreateSession();
+  const exIdx = session.exercises.findIndex(e => e.id === s.replaceId);
+  if (exIdx !== -1) {
+    const alt = deepClone(s.suggestion);
+    alt.id = s.replaceId; // keep same ID slot
+    alt.setStatus = Array(alt.type === 'cardio' ? 1 : alt.sets).fill('pending');
+    alt.accepted = true;
+    if (state.weights[alt.id]) alt.weight = state.weights[alt.id];
+    session.exercises[exIdx] = alt;
+  }
+  state.pendingSuggestions.splice(idx, 1);
+  saveState();
+  showToast(`✓ Swapped to ${s.suggestion.name}`);
+  renderSuggestPage();
+}
+
+function rejectSuggestion(idx) {
+  state.pendingSuggestions.splice(idx, 1);
+  saveState();
+  renderSuggestPage();
+}
+
+function keepExercise(idx) {
+  state.pendingSuggestions.splice(idx, 1);
+  saveState();
+  renderSuggestPage();
+}
+
+function filterLib(group) {
+  const chips = document.querySelectorAll('.chip');
+  chips.forEach(c => c.classList.remove('on'));
+  const chip = document.getElementById(`chip-${group}`);
+  if (chip) chip.classList.add('on');
+  const exList = MUSCLE_ALTERNATIVES[group] || [];
+  let html = '';
+  for (const ex of exList) {
+    html += `<div class="hist-item">
+      <div style="font-size:24px;width:36px;text-align:center;">${ex.emoji}</div>
+      <div class="hist-info">
+        <div class="hist-title">${ex.name}${muscleTag(ex.muscle)}</div>
+        <div class="hist-sub">${ex.desc} · ${ex.type==='cardio'?'Cardio':`${ex.sets}×${ex.reps}`}</div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);">${ex.weight>0?ex.weight+'kg':''}</div>
+    </div>`;
+  }
+  const libList = document.getElementById('lib-list');
+  if (libList) libList.innerHTML = html;
+}
+
+function finishSession() {
+  const session = getOrCreateSession();
+  const completedSets = session.exercises.reduce((a, ex) => a + ex.setStatus.filter(s => s === 'done').length, 0);
+  const totalSets = session.exercises.reduce((a, ex) => a + ex.setStatus.length, 0);
+  state.sessions.push({
+    date: session.date,
+    completedSets,
+    totalSets,
+    exerciseCount: session.exercises.filter(e => e.accepted).length,
+  });
+  state.currentSession = null;
+  state.pendingSuggestions = [];
+  saveState();
+  showToast('🎉 Session saved!');
+  setTimeout(() => showPage('history'), 800);
+}
+
+function showNewSession() {
+  if (confirm('Start a fresh session? Current progress will be saved.')) {
+    finishSession();
+    setTimeout(() => showPage('workout'), 900);
+  }
+}
+
+function showPage(page) {
+  state.page = page;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`nav-${page}`)?.classList.add('active');
+  if (page === 'workout') renderWorkoutPage();
+  else if (page === 'suggest') renderSuggestPage();
+  else if (page === 'history') renderHistoryPage();
+  else if (page === 'progress') renderProgressPage();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+generateSuggestions();
+showPage('workout');
+</script>
+</body>
+</html>
