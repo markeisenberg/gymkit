@@ -177,6 +177,32 @@
   .chip { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border2); color: var(--text2); transition: all 0.15s; }
   .chip.on { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
+  /* Pill action buttons (used in progress bar row) */
+  .pill-btn {
+    height: 26px; padding: 0 10px; border-radius: 20px;
+    background: var(--surface2); border: 0.5px solid var(--border2);
+    color: var(--text2); font-family: var(--font); font-size: 11px;
+    font-weight: 600; cursor: pointer; white-space: nowrap;
+    display: flex; align-items: center; transition: all 0.15s;
+  }
+  .pill-btn:active { opacity: 0.7; }
+  .pill-btn-active {
+    background: var(--accent-dim); border-color: var(--accent); color: var(--accent);
+  }
+
+  /* Completed section divider */
+  .completed-divider {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 20px 12px; margin-top: 4px;
+  }
+  .completed-divider span {
+    font-size: 11px; font-weight: 600; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 1px; white-space: nowrap;
+  }
+  .completed-divider::before, .completed-divider::after {
+    content: ''; flex: 1; height: 0.5px; background: var(--border);
+  }
+
   /* Notification toast */
   .toast { position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface); border: 1px solid var(--border2); border-radius: 24px; padding: 10px 20px; font-size: 13px; font-weight: 500; z-index: 200; opacity: 0; transition: all 0.3s; white-space: nowrap; pointer-events: none; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -218,31 +244,33 @@
   .img-sheet-handle { width: 40px; height: 4px; background: var(--surface3); border-radius: 2px; margin: 0 auto 18px; }
   .img-sheet-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
   .img-sheet-name { font-size: 17px; font-weight: 600; margin-bottom: 16px; }
-  .img-sheet-field { display: flex; gap: 10px; align-items: center; }
+  .img-sheet-field { display: flex; flex-direction: column; gap: 10px; }
   .img-sheet-field input {
-    flex: 1; height: 46px; border-radius: 12px;
+    width: 100%; height: 48px; border-radius: 12px;
     background: var(--surface2); border: 1px solid var(--border2);
-    color: var(--text); font-family: var(--font); font-size: 14px;
+    color: var(--text); font-family: var(--font);
+    /* 16px prevents iOS Safari auto-zoom on focus */
+    font-size: 16px;
     padding: 0 14px; outline: none;
+    -webkit-appearance: none;
   }
   .img-sheet-field input:focus { border-color: var(--accent); }
   .img-sheet-save {
-    height: 46px; padding: 0 18px; border-radius: 12px;
+    width: 100%; height: 50px; border-radius: 12px;
     background: var(--accent); color: #000; font-family: var(--font);
-    font-size: 14px; font-weight: 700; border: none; cursor: pointer;
-    flex-shrink: 0;
+    font-size: 15px; font-weight: 700; border: none; cursor: pointer;
   }
   .img-sheet-save:active { opacity: 0.8; }
   .img-sheet-actions { display: flex; gap: 10px; margin-top: 10px; }
   .img-sheet-clear {
-    flex: 1; height: 40px; border-radius: 10px;
+    flex: 1; height: 44px; border-radius: 10px;
     background: var(--red-dim); color: var(--red);
     border: 1px solid rgba(255,68,68,0.25);
     font-family: var(--font); font-size: 13px; font-weight: 600;
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
   }
   .img-sheet-cancel {
-    flex: 1; height: 40px; border-radius: 10px;
+    flex: 1; height: 44px; border-radius: 10px;
     background: var(--surface2); color: var(--text2);
     border: 1px solid var(--border2);
     font-family: var(--font); font-size: 13px; font-weight: 500;
@@ -299,7 +327,7 @@
     <div class="img-sheet-name" id="img-sheet-title"></div>
     <div class="img-sheet-field">
       <input type="url" id="img-url-input" placeholder="Paste image URL here…" autocomplete="off" autocorrect="off" spellcheck="false">
-      <button class="img-sheet-save" onclick="saveImageSheet()">Save</button>
+      <button class="img-sheet-save" onclick="saveImageSheet()">Save image</button>
     </div>
     <div class="img-sheet-actions">
       <button class="img-sheet-cancel" onclick="hideImageSheet()">Cancel</button>
@@ -527,6 +555,7 @@ let state = loadState() || {
   sessions: [],
   weights: {},
   userImages: {},
+  showCompleted: false,
   currentSession: null,
   pendingSuggestions: [],
 };
@@ -553,6 +582,7 @@ function getOrCreateSession() {
       startTime: null,
       endTime: null,
     };
+    state.showCompleted = false;
     saveState();
   }
   return state.currentSession;
@@ -694,30 +724,43 @@ function renderWeightCtrl(ex) {
 
 function renderWorkoutPage() {
   const session = getOrCreateSession();
-  const total = session.exercises.filter(e => e.accepted).length;
-  const done = session.exercises.filter(e => e.accepted && e.setStatus.every(s => s !== 'pending')).length;
+  const allExercises = session.exercises.filter(e => e.accepted);
+  const total = allExercises.length;
+  const done = allExercises.filter(e => e.setStatus.every(s => s !== 'pending')).length;
+  const remaining = total - done;
+  const showCompleted = state.showCompleted || false;
+
   document.getElementById('page-title').textContent = "Today's Session";
   document.getElementById('page-sub').textContent = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
   document.getElementById('top-badge').textContent = `${done} / ${total}`;
 
   let html = `<div class="page-pad">`;
-  // Progress
+
+  // Progress bar + inline action buttons
+  const showDoneBtn = done > 0
+    ? `<button class="pill-btn ${showCompleted ? 'pill-btn-active' : ''}" onclick="toggleShowCompleted()">
+        ${showCompleted ? '✓ Hide done' : `✓ ${done} done`}
+       </button>`
+    : '';
   html += `<div style="padding: 12px 20px 0;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <span style="font-size:12px;color:var(--text2);">Session progress</span>
-      <span style="font-size:12px;font-family:var(--mono);color:var(--accent);">${Math.round(done/total*100)}%</span>
+      <span style="font-size:12px;color:var(--text2);">${remaining > 0 ? `${remaining} remaining` : 'All done!'}</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        ${showDoneBtn}
+        <button class="pill-btn" onclick="showNewSession()">↺ New</button>
+      </div>
     </div>
     <div class="prog-bar"><div class="prog-fill" style="width:${done/total*100}%"></div></div>
   </div>`;
 
-  html += `<div class="section-head"><span class="section-title">Exercises</span><span class="section-action" onclick="showNewSession()">↺ New session</span></div>`;
+  html += `<div class="section-head"><span class="section-title">Exercises</span></div>`;
 
-  for (const ex of session.exercises) {
-    if (!ex.accepted) continue;
+  // Active (not done) exercises
+  for (const ex of allExercises) {
     const allDone = ex.setStatus.every(s => s !== 'pending');
-    const cardCls = allDone ? 'completed-card' : '';
-    html += `<div class="card ex-card ${cardCls}" style="margin-bottom:12px;">
-      ${renderExImg(ex, allDone)}
+    if (allDone) continue;
+    html += `<div class="card ex-card" style="margin-bottom:12px;">
+      ${renderExImg(ex, false)}
       <div class="card-inner">
         <div>
           <div class="ex-name">${ex.name}${muscleTag(ex.muscle)}</div>
@@ -729,8 +772,29 @@ function renderWorkoutPage() {
     </div>`;
   }
 
+  // Completed exercises (conditionally shown)
+  if (done > 0 && showCompleted) {
+    html += `<div class="completed-divider"><span>Completed</span></div>`;
+    for (const ex of allExercises) {
+      const allDone = ex.setStatus.every(s => s !== 'pending');
+      if (!allDone) continue;
+      html += `<div class="card ex-card completed-card" style="margin-bottom:12px;">
+        ${renderExImg(ex, true)}
+        <div class="card-inner">
+          <div>
+            <div class="ex-name">${ex.name}${muscleTag(ex.muscle)}</div>
+            <div class="ex-meta" style="margin-top:3px;">${ex.type==='cardio' ? ex.desc : `${ex.sets} sets × ${ex.reps} reps`}</div>
+          </div>
+          ${renderWeightCtrl(ex)}
+          ${renderSetPills(ex, ex)}
+        </div>
+      </div>`;
+    }
+  }
+
+  // All done state
   if (done === total) {
-    html += `<div class="card" style="text-align:center;padding:20px;">
+    html += `<div class="card" style="text-align:center;padding:20px;margin-top:4px;">
       <div style="font-size:32px;margin-bottom:8px;">🎉</div>
       <div style="font-size:17px;font-weight:600;color:var(--accent);">Session Complete!</div>
       <div style="font-size:13px;color:var(--text2);margin-top:6px;">All ${total} exercises done</div>
@@ -740,10 +804,24 @@ function renderWorkoutPage() {
 
   html += `</div>`;
   document.getElementById('main-screen').innerHTML = html;
+
   // Draw canvases for exercises without custom images
   for (const ex of session.exercises) {
     const cvs = document.getElementById(`cvs-${ex.id}`);
     if (cvs) { cvs.width = 96; cvs.height = 120; drawExerciseThumb(cvs, ex.emoji, ex.muscle); }
+  }
+}
+
+function toggleShowCompleted() {
+  state.showCompleted = !state.showCompleted;
+  saveState();
+  renderWorkoutPage();
+  // Scroll to top of completed section if showing
+  if (state.showCompleted) {
+    setTimeout(() => {
+      const divider = document.querySelector('.completed-divider');
+      if (divider) divider.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   }
 }
 
