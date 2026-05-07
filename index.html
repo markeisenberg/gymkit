@@ -152,6 +152,46 @@
   /* Workout active state */
   .completed-card .ex-name { color: var(--text3); text-decoration: line-through; }
   .completed-card .card-inner { opacity: 0.55; }
+  .skipped-card .ex-name { color: var(--text3); text-decoration: line-through; }
+  .skipped-card .card-inner { opacity: 0.75; }
+  .skipped-card { border-color: rgba(255,68,68,0.25); }
+
+  /* Per-exercise progress row (in workout cards) */
+  .ex-progress-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .ex-progress-row .prog-bar { flex: 1; margin: 0; }
+  .ex-progress-badge {
+    background: var(--accent); color: #000; font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px; font-family: var(--mono);
+    min-width: 44px; text-align: center;
+  }
+
+  /* Complete / Skip action row */
+  .ex-actions-row { display: flex; gap: 8px; margin-top: 6px; }
+  .ex-actions-row .btn { flex: 1; height: 38px; font-size: 13px; }
+
+  /* Skipped exercise alternative callout */
+  .skipped-alt-callout {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; margin-top: 6px;
+    background: var(--surface2); border: 0.5px solid var(--border2);
+    border-radius: 10px;
+  }
+  .skipped-alt-info { flex: 1; min-width: 0; }
+  .skipped-alt-label {
+    font-size: 10px; font-weight: 600; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .skipped-alt-name {
+    font-size: 13px; font-weight: 500; color: var(--text); margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .skipped-alt-btn {
+    height: 32px; padding: 0 14px; font-size: 12px; flex: 0 0 auto;
+  }
+
+  /* Skipped section divider variant */
+  .skipped-divider span { color: var(--red); }
+  .skipped-divider::before, .skipped-divider::after { background: rgba(255,68,68,0.2); }
   
   /* Muscle map illustration */
   .muscle-vis { width: 100%; height: 120px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 10px; background: var(--surface2); margin-bottom: 12px; }
@@ -276,6 +316,21 @@
     font-family: var(--font); font-size: 13px; font-weight: 500;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
   }
+  .img-sheet-search-row {
+    display: flex; gap: 8px; margin-bottom: 12px;
+  }
+  .img-sheet-search-btn {
+    flex: 1; height: 44px; border-radius: 10px;
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border2);
+    font-family: var(--font); font-size: 13px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .img-sheet-search-btn:active { opacity: 0.75; }
+  .img-sheet-or {
+    text-align: center; font-size: 11px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 1.5px; margin: 4px 0 8px;
+  }
 
   /* Contextual card menu items */
   .cmenu-item {
@@ -325,8 +380,13 @@
     <div class="img-sheet-handle"></div>
     <div class="img-sheet-label">Exercise image</div>
     <div class="img-sheet-name" id="img-sheet-title"></div>
+    <div class="img-sheet-search-row">
+      <button class="img-sheet-search-btn" onclick="searchExerciseImage('unsplash')">🔍 Unsplash</button>
+      <button class="img-sheet-search-btn" onclick="searchExerciseImage('ddg')">🔍 DuckDuckGo</button>
+    </div>
+    <div class="img-sheet-or">— or paste a URL —</div>
     <div class="img-sheet-field">
-      <input type="url" id="img-url-input" placeholder="Paste image URL here…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <input type="url" id="img-url-input" placeholder="https://…" autocomplete="off" autocorrect="off" spellcheck="false">
       <button class="img-sheet-save" onclick="saveImageSheet()">Save image</button>
     </div>
     <div class="img-sheet-actions">
@@ -460,8 +520,28 @@ function showImageSheet(exId, exName) {
   input.value = current;
   clearBtn.style.display = current ? 'flex' : 'none';
   sheet.dataset.exid = exId;
+  sheet.dataset.exname = exName;
   sheet.classList.remove('hidden');
-  setTimeout(() => input.focus(), 120);
+  // Don't auto-focus — opening the keyboard makes the search buttons harder to reach.
+  // The user can tap the input to focus it when ready to paste.
+}
+
+// Open a URL in Firefox Focus on iOS via its custom scheme.
+// On Android Firefox Focus is just a regular browser, so the scheme falls through
+// and the URL opens in whatever browser handles it.
+function openInFirefoxFocus(url) {
+  window.location.href = 'firefox-focus://open-url?url=' + encodeURIComponent(url);
+}
+
+function searchExerciseImage(provider) {
+  const sheet = document.getElementById('img-sheet');
+  const name = (sheet.dataset.exname || '').trim();
+  if (!name) return;
+  const q = encodeURIComponent(name + ' exercise');
+  const target = provider === 'unsplash'
+    ? 'https://unsplash.com/s/photos/' + q
+    : 'https://duckduckgo.com/?iax=images&ia=images&q=' + q;
+  openInFirefoxFocus(target);
 }
 
 function hideImageSheet() {
@@ -528,13 +608,13 @@ const BASE_WORKOUT = [
   { id:'w0',  name:'1km Treadmill Run',        muscle:'Cardio',                emoji:'🏃', sets:1,  reps:null, weight:0,    type:'cardio',  desc:'Warm-up cardio' },
   { id:'w1',  name:'Leg Press Machine',         muscle:'Legs',                  emoji:'🦵', sets:3,  reps:12,   weight:70,   type:'weight',  desc:'Seated plate-loaded leg press' },
   { id:'w2',  name:'Lat Pulldown Machine',      muscle:'Back (Lats)',           emoji:'🏋', sets:4,  reps:12,   weight:35,   type:'weight',  desc:'Wide grip cable pulldown' },
-  { id:'w3',  name:'Machine Row',               muscle:'Back (Mid)',            emoji:'🏋', sets:3,  reps:12,   weight:40,   type:'weight',  desc:'Chest-supported row machine' },
+  { id:'w3',  name:'Seated Cable Row',          muscle:'Back (Mid)',            emoji:'🏋', sets:3,  reps:12,   weight:40,   type:'weight',  desc:'Cable station with V-bar handle' },
   { id:'w4',  name:'Machine Chest Press',       muscle:'Chest',                 emoji:'💪', sets:4,  reps:12,   weight:30,   type:'weight',  desc:'Chest press machine' },
-  { id:'w5',  name:'Machine Leg Extension',     muscle:'Legs (Quads)',          emoji:'🦵', sets:3,  reps:12,   weight:25,   type:'weight',  desc:'Seated quad isolation' },
-  { id:'w6',  name:'Machine Leg Curl',          muscle:'Legs (Hamstrings)',     emoji:'🦵', sets:3,  reps:12,   weight:25,   type:'weight',  desc:'Lying hamstring curl' },
-  { id:'w7',  name:'Machine Adduction',         muscle:'Inner Thighs',          emoji:'◀▶', sets:3,  reps:12,   weight:35,   type:'weight',  desc:'Seated inner thigh machine' },
-  { id:'w8',  name:'Machine Abduction',         muscle:'Outer Thighs',          emoji:'▶◀', sets:3,  reps:12,   weight:22.5, type:'weight',  desc:'Seated outer thigh machine' },
-  { id:'w9',  name:'Machine Fly',               muscle:'Chest',                 emoji:'🦋', sets:3,  reps:12,   weight:15,   type:'weight',  desc:'Pec deck fly machine' },
+  { id:'w5',  name:'Leg Extension Machine',     muscle:'Legs (Quads)',          emoji:'🦵', sets:3,  reps:12,   weight:25,   type:'weight',  desc:'Seated quadriceps isolation' },
+  { id:'w6',  name:'Leg Curl Machine',          muscle:'Legs (Hamstrings)',     emoji:'🦵', sets:3,  reps:12,   weight:25,   type:'weight',  desc:'Lying or seated hamstring curl' },
+  { id:'w7',  name:'Hip Adduction Machine',     muscle:'Inner Thighs',          emoji:'◀▶', sets:3,  reps:12,   weight:35,   type:'weight',  desc:'Seated inner thigh squeeze' },
+  { id:'w8',  name:'Hip Abduction Machine',     muscle:'Outer Thighs',          emoji:'▶◀', sets:3,  reps:12,   weight:22.5, type:'weight',  desc:'Seated outer thigh press' },
+  { id:'w9',  name:'Pec Deck / Machine Fly',    muscle:'Chest',                 emoji:'🦋', sets:3,  reps:12,   weight:15,   type:'weight',  desc:'Pec deck fly machine' },
   { id:'w10', name:'Machine Bicep Curl',        muscle:'Biceps',                emoji:'💪', sets:3,  reps:12,   weight:10,   type:'weight',  desc:'Preacher curl machine' },
   { id:'w11', name:'Dumbbell Lateral Raise',    muscle:'Shoulders (Side)',      emoji:'✈', sets:3,  reps:12,   weight:6,    type:'weight',  desc:'Fixed dumbbells — no plates' },
   { id:'w12', name:'Machine Tricep Extension',  muscle:'Triceps',               emoji:'🔱', sets:3,  reps:12,   weight:27.5, type:'weight',  desc:'Tricep extension machine' },
@@ -583,9 +663,42 @@ function getOrCreateSession() {
       endTime: null,
     };
     state.showCompleted = false;
+    state.showSkipped = false;
     saveState();
+  } else {
+    // Migrate any stale names from a session created before the canonical-name update
+    const baseById = Object.fromEntries(BASE_WORKOUT.map(b => [b.id, b]));
+    let migrated = false;
+    for (const ex of state.currentSession.exercises) {
+      const base = baseById[ex.id];
+      if (base && ex.name !== base.name && !ex.swappedFromBase) {
+        ex.name = base.name;
+        ex.muscle = base.muscle;
+        ex.desc = base.desc;
+        migrated = true;
+      }
+    }
+    if (migrated) saveState();
   }
   return state.currentSession;
+}
+
+// Normalize a name for fuzzy matching (case-insensitive, punctuation/whitespace stripped)
+function normalizeName(s) {
+  return (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// Build the set of normalized names + ids already present in the session
+function getSessionExerciseKeys(session, excludeIds = []) {
+  const names = new Set();
+  const ids = new Set();
+  for (const e of session.exercises) {
+    if (!e.accepted) continue;
+    if (excludeIds.includes(e.id)) continue;
+    names.add(normalizeName(e.name));
+    ids.add(e.id);
+  }
+  return { names, ids };
 }
 
 // Generate suggestions based on the current session
@@ -596,10 +709,12 @@ function generateSuggestions() {
   // Pick 2-3 random exercises from the session to suggest replacements for
   const candidates = session.exercises.filter(e => e.type !== 'cardio').slice(0, 12);
   const picked = candidates.sort(() => 0.5 - Math.random()).slice(0, 3);
+  // Pre-compute the full set of names/ids in the session so we never suggest a duplicate
   for (const ex of picked) {
     const group = getMuscleGroup(ex);
     const pool = MUSCLE_ALTERNATIVES[group] || [];
-    const alts = pool.filter(a => a.id !== ex.id && a.name !== ex.name);
+    const { names, ids } = getSessionExerciseKeys(session, [ex.id]);
+    const alts = pool.filter(a => !ids.has(a.id) && !names.has(normalizeName(a.name)));
     if (alts.length === 0) continue;
     const alt = alts[Math.floor(Math.random() * alts.length)];
     suggestions.push({
@@ -696,21 +811,41 @@ function renderExImg(ex, allDone) {
   </div>`;
 }
 
-function renderSetPills(ex, sessionEx) {
-  if (ex.type === 'cardio') {
-    const s = sessionEx.setStatus[0];
-    const cls = s === 'done' ? 'done' : s === 'skipped' ? 'skipped' : '';
-    return `<div class="sets-row"><span class="set-pill ${cls}" onclick="toggleSet('${ex.id}',0)" title="Tap to mark done/skip"><span class="set-check">${s==='done'?'✓':s==='skipped'?'✗':'▷'}</span> 1km</span></div>`;
-  }
-  let pills = '<div class="sets-row">';
-  for (let i = 0; i < ex.sets; i++) {
-    const s = sessionEx.setStatus[i];
-    const cls = s === 'done' ? 'done' : s === 'skipped' ? 'skipped' : '';
-    const icon = s === 'done' ? '✓' : s === 'skipped' ? '✗' : String(i+1);
-    pills += `<span class="set-pill ${cls}" onclick="toggleSet('${ex.id}',${i})">${icon} × ${ex.reps}</span>`;
-  }
-  pills += '</div>';
-  return pills;
+// Returns [done, skipped, total, advanced] counts for an exercise's setStatus
+function setCounts(ex) {
+  const done = ex.setStatus.filter(s => s === 'done').length;
+  const skipped = ex.setStatus.filter(s => s === 'skipped').length;
+  const total = ex.setStatus.length;
+  return { done, skipped, total, advanced: done + skipped };
+}
+
+// Render per-exercise progress bar + badge
+function renderExProgress(ex) {
+  const { advanced, total, done } = setCounts(ex);
+  const pct = total > 0 ? (advanced / total) * 100 : 0;
+  return `<div class="ex-progress-row">
+    <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+    <div class="ex-progress-badge">${done} / ${total}</div>
+  </div>`;
+}
+
+// Render the Complete/Skip action row. If no pending sets remain, hide it.
+function renderExActions(ex) {
+  const hasPending = ex.setStatus.some(s => s === 'pending');
+  if (!hasPending) return '';
+  const isCardio = ex.type === 'cardio';
+  return `<div class="ex-actions-row">
+    <button class="btn btn-accept" onclick="completeNextSet('${ex.id}')">✓ Complete${isCardio ? '' : ' set'}</button>
+    <button class="btn btn-skip" onclick="skipNextSet('${ex.id}')">✕ Skip${isCardio ? '' : ' set'}</button>
+  </div>`;
+}
+
+// Find an alternative for a fully-skipped exercise: same muscle group, not already in session
+function getAltForSkipped(ex, session) {
+  const group = getMuscleGroup(ex);
+  const pool = MUSCLE_ALTERNATIVES[group] || [];
+  const { names, ids } = getSessionExerciseKeys(session);
+  return pool.find(a => !ids.has(a.id) && !names.has(normalizeName(a.name))) || null;
 }
 
 function renderWeightCtrl(ex) {
@@ -726,39 +861,55 @@ function renderWorkoutPage() {
   const session = getOrCreateSession();
   const allExercises = session.exercises.filter(e => e.accepted);
   const total = allExercises.length;
-  const done = allExercises.filter(e => e.setStatus.every(s => s !== 'pending')).length;
-  const remaining = total - done;
+  // Bucket exercises:
+  // - active: at least one pending set
+  // - completed: no pending and at least one done set (mixed done/skipped also goes here)
+  // - fullySkipped: every set is skipped
+  const active = allExercises.filter(e => e.setStatus.some(s => s === 'pending'));
+  const fullySkipped = allExercises.filter(e => e.setStatus.length > 0 && e.setStatus.every(s => s === 'skipped'));
+  const completed = allExercises.filter(e =>
+    e.setStatus.length > 0 &&
+    e.setStatus.every(s => s !== 'pending') &&
+    e.setStatus.some(s => s === 'done')
+  );
+  const noPending = completed.length + fullySkipped.length;
+  const remaining = total - noPending;
   const showCompleted = state.showCompleted || false;
+  const showSkipped = state.showSkipped || false;
 
   document.getElementById('page-title').textContent = "Today's Session";
   document.getElementById('page-sub').textContent = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
-  document.getElementById('top-badge').textContent = `${done} / ${total}`;
+  document.getElementById('top-badge').textContent = `${noPending} / ${total}`;
 
   let html = `<div class="page-pad">`;
 
-  // Progress bar + inline action buttons
-  const showDoneBtn = done > 0
+  // Top progress bar + inline pill buttons
+  const doneBtn = completed.length > 0
     ? `<button class="pill-btn ${showCompleted ? 'pill-btn-active' : ''}" onclick="toggleShowCompleted()">
-        ${showCompleted ? '✓ Hide done' : `✓ ${done} done`}
+        ${showCompleted ? '✓ Hide done' : `✓ ${completed.length} done`}
+       </button>`
+    : '';
+  const skippedBtn = fullySkipped.length > 0
+    ? `<button class="pill-btn ${showSkipped ? 'pill-btn-active' : ''}" onclick="toggleShowSkipped()">
+        ${showSkipped ? '✕ Hide skipped' : `✕ ${fullySkipped.length} skipped`}
        </button>`
     : '';
   html += `<div style="padding: 12px 20px 0;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;">
       <span style="font-size:12px;color:var(--text2);">${remaining > 0 ? `${remaining} remaining` : 'All done!'}</span>
-      <div style="display:flex;gap:6px;align-items:center;">
-        ${showDoneBtn}
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+        ${doneBtn}
+        ${skippedBtn}
         <button class="pill-btn" onclick="showNewSession()">↺ New</button>
       </div>
     </div>
-    <div class="prog-bar"><div class="prog-fill" style="width:${done/total*100}%"></div></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${total > 0 ? noPending/total*100 : 0}%"></div></div>
   </div>`;
 
   html += `<div class="section-head"><span class="section-title">Exercises</span></div>`;
 
-  // Active (not done) exercises
-  for (const ex of allExercises) {
-    const allDone = ex.setStatus.every(s => s !== 'pending');
-    if (allDone) continue;
+  // Active exercises
+  for (const ex of active) {
     html += `<div class="card ex-card" style="margin-bottom:12px;">
       ${renderExImg(ex, false)}
       <div class="card-inner">
@@ -767,17 +918,44 @@ function renderWorkoutPage() {
           <div class="ex-meta" style="margin-top:3px;">${ex.type==='cardio' ? ex.desc : `${ex.sets} sets × ${ex.reps} reps`}</div>
         </div>
         ${renderWeightCtrl(ex)}
-        ${renderSetPills(ex, ex)}
+        ${renderExProgress(ex)}
+        ${renderExActions(ex)}
       </div>
     </div>`;
   }
 
+  // Skipped exercises (conditionally shown) — with inline alt suggestion
+  if (fullySkipped.length > 0 && showSkipped) {
+    html += `<div class="completed-divider skipped-divider"><span>Skipped</span></div>`;
+    for (const ex of fullySkipped) {
+      const alt = getAltForSkipped(ex, session);
+      const altHtml = alt ? `<div class="skipped-alt-callout">
+        <div class="skipped-alt-info">
+          <div class="skipped-alt-label">Try this instead</div>
+          <div class="skipped-alt-name">${alt.emoji} ${alt.name}</div>
+        </div>
+        <button class="btn btn-accept skipped-alt-btn" onclick="swapSkippedFor('${ex.id}','${alt.id}')">Swap</button>
+      </div>` : '';
+      html += `<div class="card ex-card skipped-card" style="margin-bottom:12px;">
+        ${renderExImg(ex, true)}
+        <div class="card-inner">
+          <div>
+            <div class="ex-name">${ex.name}${muscleTag(ex.muscle)}</div>
+            <div class="ex-meta" style="margin-top:3px;">All ${ex.setStatus.length} sets skipped</div>
+          </div>
+          ${altHtml}
+          <div class="ex-actions-row">
+            <button class="btn btn-skip" onclick="reAddSkipped('${ex.id}')">↺ Re-add to active</button>
+          </div>
+        </div>
+      </div>`;
+    }
+  }
+
   // Completed exercises (conditionally shown)
-  if (done > 0 && showCompleted) {
+  if (completed.length > 0 && showCompleted) {
     html += `<div class="completed-divider"><span>Completed</span></div>`;
-    for (const ex of allExercises) {
-      const allDone = ex.setStatus.every(s => s !== 'pending');
-      if (!allDone) continue;
+    for (const ex of completed) {
       html += `<div class="card ex-card completed-card" style="margin-bottom:12px;">
         ${renderExImg(ex, true)}
         <div class="card-inner">
@@ -786,18 +964,18 @@ function renderWorkoutPage() {
             <div class="ex-meta" style="margin-top:3px;">${ex.type==='cardio' ? ex.desc : `${ex.sets} sets × ${ex.reps} reps`}</div>
           </div>
           ${renderWeightCtrl(ex)}
-          ${renderSetPills(ex, ex)}
+          ${renderExProgress(ex)}
         </div>
       </div>`;
     }
   }
 
-  // All done state
-  if (done === total) {
+  // All done state — fires when every exercise has no pending sets
+  if (noPending === total && total > 0) {
     html += `<div class="card" style="text-align:center;padding:20px;margin-top:4px;">
       <div style="font-size:32px;margin-bottom:8px;">🎉</div>
       <div style="font-size:17px;font-weight:600;color:var(--accent);">Session Complete!</div>
-      <div style="font-size:13px;color:var(--text2);margin-top:6px;">All ${total} exercises done</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:6px;">${completed.length} done · ${fullySkipped.length} skipped</div>
       <button class="btn btn-primary" style="margin-top:16px;" onclick="finishSession()">Save & Finish</button>
     </div>`;
   }
@@ -836,9 +1014,7 @@ function renderSuggestPage() {
   if (state.pendingSuggestions.length === 0) {
     html += `<div class="empty"><div class="empty-icon">✦</div>No new suggestions for today.<br>Complete some sets and check back!</div>`;
   } else {
-    html += `<div class="section-head"><span class="section-title">Suggested Swaps</span></div>`;
-    html += `<div style="padding: 0 16px 12px; font-size: 13px; color: var(--text2);">Tap Accept to swap an exercise in today's session, or Reject to dismiss.</div>`;
-
+    html += `<div style="height:8px;"></div>`;
     for (let i = 0; i < state.pendingSuggestions.length; i++) {
       const s = state.pendingSuggestions[i];
       const alt = s.suggestion;
@@ -846,9 +1022,9 @@ function renderSuggestPage() {
         <div style="padding:12px 14px 8px 14px;border-bottom:0.5px solid rgba(200,255,0,0.2);">
           <div class="suggest-label" style="margin-bottom:0;">Replace: ${s.replaceName}</div>
         </div>
-        <div style="display:flex;align-items:stretch;min-height:90px;">
-          <div class="ex-img" style="width:80px;border-radius:0;font-size:36px;border-right:0.5px solid rgba(200,255,0,0.2);">${alt.emoji}</div>
-          <div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:stretch;min-height:110px;">
+          ${renderExImg(alt, false)}
+          <div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0;">
             <div>
               <div class="ex-name">${alt.name}${muscleTag(alt.muscle)}</div>
               <div class="ex-meta" style="margin-top:3px;">${alt.sets} sets × ${alt.reps} reps · ${alt.weight} kg</div>
@@ -858,7 +1034,6 @@ function renderSuggestPage() {
         </div>
         <div class="suggest-actions" style="padding:0 14px 14px;">
           <button class="btn btn-accept" onclick="acceptSuggestion(${i})">✓ Accept</button>
-          <button class="btn btn-skip" onclick="keepExercise(${i})">Keep original</button>
           <button class="btn btn-reject" onclick="rejectSuggestion(${i})">✕</button>
         </div>
       </div>`;
@@ -888,6 +1063,13 @@ function renderSuggestPage() {
   }
   html += `</div></div>`;
   document.getElementById('main-screen').innerHTML = html;
+
+  // Draw canvas placeholders for any suggestion alt without a custom image
+  for (const s of state.pendingSuggestions) {
+    const alt = s.suggestion;
+    const cvs = document.getElementById(`cvs-${alt.id}`);
+    if (cvs) { cvs.width = 96; cvs.height = 120; drawExerciseThumb(cvs, alt.emoji, alt.muscle); }
+  }
 }
 
 function renderHistoryPage() {
@@ -926,37 +1108,158 @@ function renderHistoryPage() {
   document.getElementById('main-screen').innerHTML = html;
 }
 
+// Muscle group labels for charts/legends
+const MUSCLE_GROUP_LABELS = {
+  cardio: 'Cardio', legs: 'Legs', back: 'Back', chest: 'Chest',
+  biceps: 'Biceps', triceps: 'Triceps', shoulders: 'Shoulders', core: 'Core',
+};
+
+// Sets actually completed (not skipped) per muscle group, for one session
+function getSessionMuscleVolume(session) {
+  const vol = {};
+  for (const ex of (session.exercises || [])) {
+    if (!ex.accepted) continue;
+    const group = getMuscleGroup(ex);
+    const done = ex.setStatus.filter(s => s === 'done').length;
+    if (done > 0) vol[group] = (vol[group] || 0) + done;
+  }
+  return vol;
+}
+
+// Aggregate per-group volume across today + the last N finished sessions
+function getRecentMuscleVolume(daysWindow = 7) {
+  const session = state.currentSession;
+  const totals = session ? { ...getSessionMuscleVolume(session) } : {};
+  const recent = state.sessions.slice(-daysWindow);
+  for (const s of recent) {
+    if (!s.muscleVolume) continue;
+    for (const g of Object.keys(s.muscleVolume)) {
+      totals[g] = (totals[g] || 0) + s.muscleVolume[g];
+    }
+  }
+  return totals;
+}
+
+// Map intensity (0..1) to an accent-tinted fill
+function muscleZoneFill(intensity) {
+  const a = 0.08 + Math.max(0, Math.min(1, intensity)) * 0.85;
+  return `rgba(200,255,0,${a.toFixed(2)})`;
+}
+
+// Render a simplified front+back body SVG with muscle zones tinted by recent volume
+function renderMuscleSVG(totals) {
+  // Find the max so we can normalize. Cardio is shown separately, not on the body.
+  const bodyGroups = ['shoulders', 'chest', 'biceps', 'core', 'back', 'triceps', 'legs'];
+  const max = Math.max(1, ...bodyGroups.map(g => totals[g] || 0));
+  const f = g => muscleZoneFill((totals[g] || 0) / max);
+  const baseFill = 'var(--surface3)';
+  // Each silhouette is drawn in a 100-wide column. Front first, then back.
+  // Front: shoulders, chest, biceps, core, quads (legs), calves (legs)
+  // Back: shoulders, back/lats, triceps, glutes (legs), hams (legs), calves (legs)
+  return `<svg viewBox="0 0 220 200" preserveAspectRatio="xMidYMid meet"
+            style="width:100%;max-width:300px;display:block;margin:0 auto;">
+    <!-- FRONT -->
+    <g transform="translate(0,0)">
+      <circle cx="50" cy="14" r="11" fill="${baseFill}"/>
+      <rect x="30" y="28" width="40" height="50" rx="8" fill="${baseFill}"/>
+      <rect x="14" y="30" width="14" height="38" rx="6" fill="${baseFill}"/>
+      <rect x="72" y="30" width="14" height="38" rx="6" fill="${baseFill}"/>
+      <rect x="32" y="78" width="36" height="14" rx="4" fill="${baseFill}"/>
+      <rect x="32" y="92" width="16" height="80" rx="6" fill="${baseFill}"/>
+      <rect x="52" y="92" width="16" height="80" rx="6" fill="${baseFill}"/>
+      <!-- Zones -->
+      <rect x="30" y="28" width="40" height="9" rx="4" fill="${f('shoulders')}"/>
+      <rect x="30" y="37" width="40" height="18" rx="3" fill="${f('chest')}"/>
+      <rect x="32" y="56" width="36" height="22" rx="3" fill="${f('core')}"/>
+      <rect x="14" y="32" width="14" height="20" rx="6" fill="${f('biceps')}"/>
+      <rect x="72" y="32" width="14" height="20" rx="6" fill="${f('biceps')}"/>
+      <rect x="32" y="94" width="16" height="44" rx="4" fill="${f('legs')}"/>
+      <rect x="52" y="94" width="16" height="44" rx="4" fill="${f('legs')}"/>
+      <rect x="32" y="140" width="16" height="30" rx="4" fill="${f('legs')}"/>
+      <rect x="52" y="140" width="16" height="30" rx="4" fill="${f('legs')}"/>
+      <text x="50" y="190" text-anchor="middle" fill="var(--text3)" font-size="8" font-family="DM Mono, monospace" letter-spacing="1">FRONT</text>
+    </g>
+    <!-- BACK -->
+    <g transform="translate(110,0)">
+      <circle cx="50" cy="14" r="11" fill="${baseFill}"/>
+      <rect x="30" y="28" width="40" height="50" rx="8" fill="${baseFill}"/>
+      <rect x="14" y="30" width="14" height="38" rx="6" fill="${baseFill}"/>
+      <rect x="72" y="30" width="14" height="38" rx="6" fill="${baseFill}"/>
+      <rect x="32" y="78" width="36" height="14" rx="4" fill="${baseFill}"/>
+      <rect x="32" y="92" width="16" height="80" rx="6" fill="${baseFill}"/>
+      <rect x="52" y="92" width="16" height="80" rx="6" fill="${baseFill}"/>
+      <!-- Zones -->
+      <rect x="30" y="28" width="40" height="9" rx="4" fill="${f('shoulders')}"/>
+      <rect x="32" y="37" width="36" height="40" rx="3" fill="${f('back')}"/>
+      <rect x="14" y="32" width="14" height="36" rx="6" fill="${f('triceps')}"/>
+      <rect x="72" y="32" width="14" height="36" rx="6" fill="${f('triceps')}"/>
+      <rect x="32" y="78" width="36" height="14" rx="4" fill="${f('legs')}"/>
+      <rect x="32" y="94" width="16" height="44" rx="4" fill="${f('legs')}"/>
+      <rect x="52" y="94" width="16" height="44" rx="4" fill="${f('legs')}"/>
+      <rect x="32" y="140" width="16" height="30" rx="4" fill="${f('legs')}"/>
+      <rect x="52" y="140" width="16" height="30" rx="4" fill="${f('legs')}"/>
+      <text x="50" y="190" text-anchor="middle" fill="var(--text3)" font-size="8" font-family="DM Mono, monospace" letter-spacing="1">BACK</text>
+    </g>
+  </svg>`;
+}
+
 function renderProgressPage() {
   document.getElementById('page-title').textContent = 'Progress';
-  document.getElementById('page-sub').textContent = 'Weight & performance tracking';
+  document.getElementById('page-sub').textContent = 'Focus & performance tracking';
   document.getElementById('top-badge').textContent = '↑';
 
   const session = getOrCreateSession();
+  const showWeights = state.showWeights || false;
   let html = `<div class="page-pad">`;
-  html += `<div class="section-head"><span class="section-title">Current Weights</span></div>`;
 
-  for (const ex of session.exercises) {
-    if (ex.type === 'cardio') continue;
-    html += `<div class="card ex-card" style="margin-bottom:12px;">
-      ${renderExImg(ex, false)}
-      <div class="card-inner" style="justify-content:center;">
-        <div>
-          <div class="ex-name" style="font-size:14px;">${ex.name}</div>
-          <div class="ex-meta" style="margin-top:2px;">${ex.muscle}</div>
-        </div>
-        ${renderWeightCtrl(ex)}
+  // ── Muscle Focus ───────────────────────────────────────────────
+  const totals = getRecentMuscleVolume(7);
+  const hasFocusData = Object.values(totals).some(v => v > 0);
+  html += `<div class="section-head"><span class="section-title">Muscle Focus</span><span class="section-action" style="cursor:default;font-size:11px;color:var(--text3);">last 7 days + today</span></div>`;
+  html += `<div class="card" style="padding:14px;">`;
+  if (!hasFocusData) {
+    html += `<div style="text-align:center;padding:8px 0 4px;color:var(--text3);font-size:13px;">Complete some sets to see your focus map.</div>`;
+  }
+  html += renderMuscleSVG(totals);
+  // Per-group breakdown with bars
+  const groupKeys = ['legs','back','chest','shoulders','biceps','triceps','core','cardio'];
+  const max = Math.max(1, ...groupKeys.map(g => totals[g] || 0));
+  html += `<div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;">`;
+  for (const g of groupKeys) {
+    const v = totals[g] || 0;
+    const pct = (v / max) * 100;
+    const isCold = v === 0;
+    html += `<div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+      <div style="width:64px;color:${isCold ? 'var(--red)' : 'var(--text2)'};font-weight:${isCold ? '600' : '500'};">${MUSCLE_GROUP_LABELS[g]}</div>
+      <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${isCold ? 'var(--red-dim)' : 'var(--accent)'};"></div>
       </div>
+      <div style="width:30px;text-align:right;font-family:var(--mono);color:${isCold ? 'var(--red)' : 'var(--text3)'};">${v}</div>
     </div>`;
   }
+  html += `</div>`;
+  // Highlight neglected groups
+  const neglected = groupKeys.filter(g => (totals[g] || 0) === 0).map(g => MUSCLE_GROUP_LABELS[g]);
+  if (neglected.length > 0 && hasFocusData) {
+    html += `<div style="margin-top:12px;padding:8px 10px;background:var(--red-dim);border-radius:8px;font-size:12px;color:var(--red);">
+      ⚠ Untouched this week: <span style="font-weight:600;">${neglected.join(', ')}</span>
+    </div>`;
+  }
+  html += `</div>`;
 
-  // Volume chart (simple ASCII/HTML bar)
-  if (state.sessions.length > 1) {
-    html += `<div class="section-head" style="margin-top:8px;"><span class="section-title">Session Volume</span></div>`;
-    html += `<div class="card">`;
+  // ── Session Volume ─────────────────────────────────────────────
+  html += `<div class="section-head" style="margin-top:8px;"><span class="section-title">Session Volume</span></div>`;
+  html += `<div style="padding:0 16px 10px;font-size:12px;color:var(--text2);line-height:1.5;">
+    Total number of sets completed in each session — a rough measure of how much work each session contained.
+  </div>`;
+  if (state.sessions.length === 0) {
+    html += `<div class="empty" style="padding:20px;">No finished sessions yet.</div>`;
+  } else {
+    html += `<div class="card" style="padding:14px;">`;
     const recent = state.sessions.slice(-7);
-    const maxSets = Math.max(...recent.map(s => s.completedSets));
+    const maxSets = Math.max(1, ...recent.map(s => s.completedSets));
     for (const s of recent) {
-      const pct = maxSets > 0 ? (s.completedSets / maxSets) * 100 : 0;
+      const pct = (s.completedSets / maxSets) * 100;
       const label = s.date.split(' ').slice(0,3).join(' ');
       html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <div style="font-size:11px;color:var(--text2);width:70px;flex-shrink:0;font-family:var(--mono);">${label}</div>
@@ -969,27 +1272,117 @@ function renderProgressPage() {
     html += `</div>`;
   }
 
+  // ── Current Weights (accordion) ───────────────────────────────
+  html += `<div class="section-head" style="margin-top:8px;cursor:pointer;" onclick="toggleShowWeights()">
+    <span class="section-title">Current Weights</span>
+    <span class="section-action">${showWeights ? '▴ Hide' : '▾ Show'}</span>
+  </div>`;
+  if (showWeights) {
+    for (const ex of session.exercises) {
+      if (ex.type === 'cardio') continue;
+      html += `<div class="card ex-card" style="margin-bottom:12px;">
+        ${renderExImg(ex, false)}
+        <div class="card-inner" style="justify-content:center;">
+          <div>
+            <div class="ex-name" style="font-size:14px;">${ex.name}</div>
+            <div class="ex-meta" style="margin-top:2px;">${ex.muscle}</div>
+          </div>
+          ${renderWeightCtrl(ex)}
+        </div>
+      </div>`;
+    }
+  }
+
   html += `</div>`;
   document.getElementById('main-screen').innerHTML = html;
-  for (const ex of session.exercises) {
-    if (ex.type === 'cardio') continue;
-    const cvs = document.getElementById(`cvs-${ex.id}`);
-    if (cvs) { cvs.width = 96; cvs.height = 120; drawExerciseThumb(cvs, ex.emoji, ex.muscle); }
+  if (showWeights) {
+    for (const ex of session.exercises) {
+      if (ex.type === 'cardio') continue;
+      const cvs = document.getElementById(`cvs-${ex.id}`);
+      if (cvs) { cvs.width = 96; cvs.height = 120; drawExerciseThumb(cvs, ex.emoji, ex.muscle); }
+    }
   }
 }
 
+function toggleShowWeights() {
+  state.showWeights = !state.showWeights;
+  saveState();
+  renderProgressPage();
+}
+
 // ─── INTERACTIONS ─────────────────────────────────────────────────────────────
-function toggleSet(exId, setIdx) {
+function completeNextSet(exId) {
   const session = getOrCreateSession();
   const ex = session.exercises.find(e => e.id === exId);
   if (!ex) return;
-  const cur = ex.setStatus[setIdx];
-  if (cur === 'pending') ex.setStatus[setIdx] = 'done';
-  else if (cur === 'done') ex.setStatus[setIdx] = 'skipped';
-  else ex.setStatus[setIdx] = 'pending';
+  const idx = ex.setStatus.findIndex(s => s === 'pending');
+  if (idx === -1) return;
+  ex.setStatus[idx] = 'done';
   saveState();
   renderWorkoutPage();
-  showToast(ex.setStatus[setIdx] === 'done' ? '✓ Set complete' : ex.setStatus[setIdx] === 'skipped' ? 'Set skipped' : 'Set reset');
+  showToast('✓ Set complete');
+}
+
+function skipNextSet(exId) {
+  const session = getOrCreateSession();
+  const ex = session.exercises.find(e => e.id === exId);
+  if (!ex) return;
+  const idx = ex.setStatus.findIndex(s => s === 'pending');
+  if (idx === -1) return;
+  ex.setStatus[idx] = 'skipped';
+  saveState();
+  // If this was the last pending set and they're all skipped, surface the section
+  if (ex.setStatus.every(s => s === 'skipped')) {
+    state.showSkipped = true;
+    saveState();
+  }
+  renderWorkoutPage();
+  showToast(ex.setStatus.every(s => s === 'skipped') ? 'Exercise skipped' : 'Set skipped');
+}
+
+function reAddSkipped(exId) {
+  const session = getOrCreateSession();
+  const ex = session.exercises.find(e => e.id === exId);
+  if (!ex) return;
+  ex.setStatus = ex.setStatus.map(() => 'pending');
+  saveState();
+  renderWorkoutPage();
+  showToast('↺ Re-added to active');
+}
+
+function swapSkippedFor(exId, altLibId) {
+  const session = getOrCreateSession();
+  const exIdx = session.exercises.findIndex(e => e.id === exId);
+  if (exIdx === -1) return;
+  const allEx = Object.values(EXERCISE_DB).flat();
+  const alt = allEx.find(a => a.id === altLibId);
+  if (!alt) return;
+  const newEx = deepClone(alt);
+  const libId = newEx.id;
+  newEx.id = exId;
+  newEx.swappedFromBase = true;
+  newEx.setStatus = Array(newEx.type === 'cardio' ? 1 : newEx.sets).fill('pending');
+  newEx.accepted = true;
+  if (state.weights[exId]) newEx.weight = state.weights[exId];
+  if (state.userImages && state.userImages[libId]) {
+    state.userImages[exId] = state.userImages[libId];
+  }
+  session.exercises[exIdx] = newEx;
+  saveState();
+  renderWorkoutPage();
+  showToast(`✓ Swapped to ${newEx.name}`);
+}
+
+function toggleShowSkipped() {
+  state.showSkipped = !state.showSkipped;
+  saveState();
+  renderWorkoutPage();
+  if (state.showSkipped) {
+    setTimeout(() => {
+      const divider = document.querySelector('.skipped-divider');
+      if (divider) divider.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
 }
 
 function changeWeight(exId, delta) {
@@ -1010,10 +1403,16 @@ function acceptSuggestion(idx) {
   const exIdx = session.exercises.findIndex(e => e.id === s.replaceId);
   if (exIdx !== -1) {
     const alt = deepClone(s.suggestion);
+    const libId = alt.id; // remember the library id (for image transfer)
     alt.id = s.replaceId; // keep same ID slot
+    alt.swappedFromBase = true; // prevents the rename migration from undoing this
     alt.setStatus = Array(alt.type === 'cardio' ? 1 : alt.sets).fill('pending');
     alt.accepted = true;
     if (state.weights[alt.id]) alt.weight = state.weights[alt.id];
+    // Transfer any image set on the suggestion to the slot
+    if (state.userImages && state.userImages[libId]) {
+      state.userImages[s.replaceId] = state.userImages[libId];
+    }
     session.exercises[exIdx] = alt;
   }
   state.pendingSuggestions.splice(idx, 1);
@@ -1023,12 +1422,6 @@ function acceptSuggestion(idx) {
 }
 
 function rejectSuggestion(idx) {
-  state.pendingSuggestions.splice(idx, 1);
-  saveState();
-  renderSuggestPage();
-}
-
-function keepExercise(idx) {
   state.pendingSuggestions.splice(idx, 1);
   saveState();
   renderSuggestPage();
@@ -1064,6 +1457,7 @@ function finishSession() {
     completedSets,
     totalSets,
     exerciseCount: session.exercises.filter(e => e.accepted).length,
+    muscleVolume: getSessionMuscleVolume(session),
   });
   state.currentSession = null;
   state.pendingSuggestions = [];
