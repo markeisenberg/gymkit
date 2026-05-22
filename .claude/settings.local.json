@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const fs=require\\('fs'\\);const html=fs.readFileSync\\('c:/Repos/gymkit/index.html','utf8'\\);const m=html.match\\(/<script[^>]*>\\([\\\\s\\\\S]*?\\)<\\\\/script>/\\);if\\(!m\\){console.error\\('no script tag found'\\);process.exit\\(1\\);}try{new Function\\(m[1]+'; void 0;'\\);console.log\\('JS parses OK \\('+m[1].length+' chars\\)'\\);}catch\\(e\\){console.error\\('SYNTAX:',e.message\\);process.exit\\(1\\);}\")",
+      "Bash(node -e ' *)",
+      "Bash(node c:/Repos/gymkit/check.js)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
+    ]
+  }
+}

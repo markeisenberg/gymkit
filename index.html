@@ -36,7 +36,9 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  /* Allow normal scroll on the screen container; manipulation on buttons disables double-tap zoom */
+  .screen { touch-action: pan-y; }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); overflow: hidden; }
   
   #app { height: 100dvh; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; position: relative; overflow: hidden; }
@@ -339,6 +341,112 @@
   }
   .cmenu-item:active { background: var(--surface2); }
   .cmenu-danger { color: var(--red); }
+
+  /* Workout sub-tabs (Default / Remix / Skip-Alts) */
+  .workout-tabs {
+    display: flex; gap: 6px; padding: 12px 16px 4px;
+  }
+  .workout-tab {
+    flex: 1; height: 36px; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.4px;
+    background: var(--surface2); color: var(--text2);
+    border: 1px solid var(--border2);
+    cursor: pointer; transition: all 0.15s; text-transform: uppercase;
+  }
+  .workout-tab.active {
+    background: var(--accent-dim); color: var(--accent);
+    border-color: var(--accent);
+  }
+  .workout-tab-count {
+    font-family: var(--mono); font-size: 10px;
+    background: rgba(255,255,255,0.06); border-radius: 8px;
+    padding: 1px 6px; font-weight: 500;
+  }
+  .workout-tab.active .workout-tab-count {
+    background: rgba(200,255,0,0.18);
+  }
+
+  /* Donut chart for per-session region breakdown */
+  .donut { width: 60px; height: 60px; flex-shrink: 0; }
+  .donut-center {
+    font-size: 9px; font-family: var(--mono);
+    fill: var(--text); font-weight: 600;
+  }
+  .day-regions {
+    display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;
+  }
+  .day-region-chip {
+    font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 8px;
+    background: var(--surface2); color: var(--text2);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .day-region-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .hist-item-rich {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px; border-bottom: 0.5px solid var(--border);
+  }
+  .hist-item-rich .hist-info { flex: 1; min-width: 0; }
+
+  /* Generic modal dialog (centered/sheet) */
+  .gmodal-overlay {
+    position: fixed; inset: 0; z-index: 250;
+    background: rgba(0,0,0,0.7);
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .gmodal-panel {
+    background: var(--surface); border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 430px;
+    padding: 20px 20px calc(20px + var(--safe-bottom));
+    max-height: 80dvh; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .gmodal-handle { width: 40px; height: 4px; background: var(--surface3); border-radius: 2px; margin: 0 auto 10px; }
+  .gmodal-title { font-size: 17px; font-weight: 600; }
+  .gmodal-sub { font-size: 12px; color: var(--text2); margin-top: -4px; margin-bottom: 6px; }
+  .gmodal-row {
+    padding: 12px 14px; display: flex; align-items: center; gap: 12px;
+    border-radius: 12px; background: var(--surface2);
+    border: 1px solid transparent;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .gmodal-row.selected {
+    background: var(--accent-dim); border-color: var(--accent);
+  }
+  .gmodal-check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 13px; font-weight: 700;
+  }
+  .gmodal-row.selected .gmodal-check {
+    background: var(--accent); border-color: var(--accent); color: #000;
+  }
+  .gmodal-row-info { flex: 1; min-width: 0; }
+  .gmodal-row-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gmodal-row-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .gmodal-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .gmodal-actions .btn { flex: 1; }
+
+  /* Library "completed ever" badge */
+  .lib-ever-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+    background: var(--accent-dim); color: var(--accent);
+    letter-spacing: 0.5px; text-transform: uppercase; margin-left: 6px;
+  }
+
+  /* Reset progress button */
+  .danger-btn {
+    background: transparent; color: var(--red);
+    border: 1px solid var(--red-dim); height: 38px;
+    border-radius: 10px; padding: 0 14px; font-size: 12px;
+    font-weight: 600; font-family: var(--font); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .danger-btn:active { background: var(--red-dim); }
 </style>
 </head>
 <body>
@@ -359,9 +467,8 @@
     <button class="nav-btn active" onclick="showPage('workout')" id="nav-workout">
       <span class="nav-icon">⚡</span>WORKOUT
     </button>
-    <button class="nav-btn" onclick="showPage('suggest')" id="nav-suggest">
-      <span class="nav-icon">✦</span>SUGGEST
-      <span class="nav-dot" id="suggest-dot"></span>
+    <button class="nav-btn" onclick="showPage('library')" id="nav-library">
+      <span class="nav-icon">📚</span>LIBRARY
     </button>
     <button class="nav-btn" onclick="showPage('history')" id="nav-history">
       <span class="nav-icon">◷</span>HISTORY
@@ -481,13 +588,15 @@ const MUSCLE_ALTERNATIVES = {
 function getMuscleGroup(ex) {
   const n = ex.name.toLowerCase();
   if (ex.type === 'cardio') return 'cardio';
+  // Core checks run FIRST so "Ab Curl Machine" doesn't get caught by the generic 'curl' branch below.
+  // Avoid using includes('ab') because that matches 'cable', 'abduction', etc — use word-boundary patterns.
+  if (n.startsWith('ab ') || n.includes(' ab ') || n.includes('crunch') || n.includes('oblique') || n.includes('woodchop') || n.includes('back extension') || n.includes('core')) return 'core';
   if (n.includes('leg') || n.includes('adduct') || n.includes('abduct') || n.includes('glute') || n.includes('hip') || n.includes('calf') || n.includes('squat') || n.includes('hamstring') || n.includes('quad')) return 'legs';
   if (n.includes('pulldown') || n.includes('pull-down') || n.includes('row') || n.includes('pullover') || n.includes('lat ') || n.includes('rear delt fly') || n.includes('straight-arm')) return 'back';
-  if (n.includes('chest') || n.includes('pec') || n.includes('fly') || n.includes('press') && !n.includes('shoulder') && !n.includes('tricep') && !n.includes('leg')) return 'chest';
-  if (n.includes('bicep') || n.includes('curl') && !n.includes('leg') && !n.includes('tricep')) return 'biceps';
-  if (n.includes('tricep') || n.includes('pushdown') || n.includes('extension') && !n.includes('leg') && !n.includes('hip') && !n.includes('back')) return 'triceps';
+  if (n.includes('chest') || n.includes('pec') || n.includes('fly') || (n.includes('press') && !n.includes('shoulder') && !n.includes('tricep') && !n.includes('leg'))) return 'chest';
+  if (n.includes('bicep') || (n.includes('curl') && !n.includes('leg') && !n.includes('tricep'))) return 'biceps';
+  if (n.includes('tricep') || n.includes('pushdown') || (n.includes('extension') && !n.includes('leg') && !n.includes('hip') && !n.includes('back'))) return 'triceps';
   if (n.includes('shoulder') || n.includes('lateral raise') || n.includes('face pull') || n.includes('front raise')) return 'shoulders';
-  if (n.includes('ab') || n.includes('core') || n.includes('crunch') || n.includes('oblique') || n.includes('back extension') || n.includes('woodchop')) return 'core';
   return 'back'; // fallback
 }
 
@@ -637,8 +746,13 @@ let state = loadState() || {
   userImages: {},
   showCompleted: false,
   currentSession: null,
-  pendingSuggestions: [],
+  pendingSuggestions: [],   // legacy — retained but unused by the new Library tab
+  workoutTab: 'default',    // 'default' | 'remix' | 'skipSuggest'
+  completedExerciseNames: {}, // normalized name -> true (ever completed)
 };
+// Migrate older saved states that didn't have the new fields
+if (!state.workoutTab) state.workoutTab = 'default';
+if (!state.completedExerciseNames) state.completedExerciseNames = {};
 
 // Generate today's session if needed
 function getTodayLabel() {
@@ -659,6 +773,8 @@ function getOrCreateSession() {
     state.currentSession = {
       date: getTodayLabel(),
       exercises,
+      remixExercises: generateRemixExercises(exercises),
+      skipSuggestExercises: [],
       startTime: null,
       endTime: null,
     };
@@ -678,9 +794,56 @@ function getOrCreateSession() {
         migrated = true;
       }
     }
+    // Migrate sessions saved before the Remix / Skip-Suggest tabs existed
+    if (!state.currentSession.remixExercises) {
+      state.currentSession.remixExercises = generateRemixExercises(state.currentSession.exercises);
+      migrated = true;
+    }
+    if (!state.currentSession.skipSuggestExercises) {
+      state.currentSession.skipSuggestExercises = [];
+      migrated = true;
+    }
     if (migrated) saveState();
   }
   return state.currentSession;
+}
+
+// Build a Remix workout: same shape and count as the default, but each slot is swapped
+// for a random same-region alternative. Deterministic-ish per day so the remix is
+// stable until tomorrow — uses Date.toDateString() (already used as the session key).
+function generateRemixExercises(defaultExercises) {
+  const dayKey = getTodayLabel();
+  // Simple seeded RNG so the remix is stable for the day but differs day-to-day
+  let seed = 0;
+  for (let i = 0; i < dayKey.length; i++) seed = (seed * 31 + dayKey.charCodeAt(i)) & 0xffffffff;
+  const rand = () => { seed = (seed * 1664525 + 1013904223) & 0xffffffff; return ((seed >>> 0) / 0x100000000); };
+
+  // Track names chosen so the remix doesn't collide with itself
+  const chosenNames = new Set();
+  const out = [];
+  for (const ex of defaultExercises) {
+    const group = getMuscleGroup(ex);
+    const pool = MUSCLE_ALTERNATIVES[group] || [];
+    // Exclude the default exercise itself and anything already picked for the remix
+    const exNorm = normalizeName(ex.name);
+    const alts = pool.filter(a => normalizeName(a.name) !== exNorm && !chosenNames.has(normalizeName(a.name)));
+    let pick = alts.length > 0 ? alts[Math.floor(rand() * alts.length)] : ex;
+    chosenNames.add(normalizeName(pick.name));
+    const newEx = deepClone(pick);
+    const libId = newEx.id;
+    newEx.id = 'rmx-' + ex.id;          // unique slot id for the remix
+    newEx.libId = libId;                 // original library id (for image transfer)
+    newEx.linkedDefaultId = ex.id;       // which default slot this remix represents
+    newEx.setStatus = Array(newEx.type === 'cardio' ? 1 : newEx.sets).fill('pending');
+    newEx.accepted = true;
+    if (state.weights[newEx.id]) newEx.weight = state.weights[newEx.id];
+    // Re-use any image saved for the library exercise
+    if (state.userImages && state.userImages[libId] && !state.userImages[newEx.id]) {
+      state.userImages[newEx.id] = state.userImages[libId];
+    }
+    out.push(newEx);
+  }
+  return out;
 }
 
 // Normalize a name for fuzzy matching (case-insensitive, punctuation/whitespace stripped)
@@ -689,16 +852,66 @@ function normalizeName(s) {
 }
 
 // Build the set of normalized names + ids already present in the session
+// (default + remix + already-suggested-for-skipped). excludeIds skips specific slots.
 function getSessionExerciseKeys(session, excludeIds = []) {
   const names = new Set();
   const ids = new Set();
-  for (const e of session.exercises) {
-    if (!e.accepted) continue;
-    if (excludeIds.includes(e.id)) continue;
-    names.add(normalizeName(e.name));
-    ids.add(e.id);
+  const lists = [
+    session.exercises || [],
+    session.remixExercises || [],
+    session.skipSuggestExercises || [],
+  ];
+  for (const list of lists) {
+    for (const e of list) {
+      if (!e.accepted) continue;
+      if (excludeIds.includes(e.id)) continue;
+      names.add(normalizeName(e.name));
+      ids.add(e.id);
+    }
   }
   return { names, ids };
+}
+
+// Find an exercise by id across any of the three workout lists, and report where it lives
+function findExSlot(session, exId) {
+  for (const list of ['exercises', 'remixExercises', 'skipSuggestExercises']) {
+    const arr = session[list] || [];
+    const idx = arr.findIndex(e => e.id === exId);
+    if (idx !== -1) return { list, idx, ex: arr[idx] };
+  }
+  return null;
+}
+
+// When an exercise gets fully skipped, ensure there's a corresponding suggestion
+// in the Skip-Suggest tab (no duplicates per source).
+function ensureSkipSuggestion(session, sourceEx) {
+  if (!session.skipSuggestExercises) session.skipSuggestExercises = [];
+  if (session.skipSuggestExercises.some(s => s.sourceId === sourceEx.id)) return;
+  const group = getMuscleGroup(sourceEx);
+  const pool = MUSCLE_ALTERNATIVES[group] || [];
+  const { names, ids } = getSessionExerciseKeys(session);
+  const sourceNorm = normalizeName(sourceEx.name);
+  const alt = pool.find(a => !ids.has(a.id) && !names.has(normalizeName(a.name)) && normalizeName(a.name) !== sourceNorm);
+  if (!alt) return;
+  const newEx = deepClone(alt);
+  const libId = newEx.id;
+  newEx.libId = libId;
+  newEx.id = 'skp-' + sourceEx.id;
+  newEx.sourceId = sourceEx.id;
+  newEx.sourceName = sourceEx.name;
+  newEx.setStatus = Array(newEx.type === 'cardio' ? 1 : newEx.sets).fill('pending');
+  newEx.accepted = true;
+  if (state.weights[newEx.id]) newEx.weight = state.weights[newEx.id];
+  if (state.userImages && state.userImages[libId] && !state.userImages[newEx.id]) {
+    state.userImages[newEx.id] = state.userImages[libId];
+  }
+  session.skipSuggestExercises.push(newEx);
+}
+
+// Mark an exercise's name as 'ever completed' (used by the Library tab)
+function markEverCompleted(ex) {
+  if (!state.completedExerciseNames) state.completedExerciseNames = {};
+  state.completedExerciseNames[normalizeName(ex.name)] = true;
 }
 
 // Generate suggestions based on the current session
@@ -857,17 +1070,92 @@ function renderWeightCtrl(ex) {
   </div>`;
 }
 
+// Shared card renderer for an exercise. opts: { showWeightCtrl, showActions, completedStyle, skippedStyle, marginBottom }
+function renderExerciseCard(ex, opts = {}) {
+  const completedStyle = !!opts.completedStyle;
+  const skippedStyle = !!opts.skippedStyle;
+  const showWeightCtrl = opts.showWeightCtrl !== false;
+  const showActions = opts.showActions !== false;
+  const cls = ['card','ex-card'];
+  if (completedStyle) cls.push('completed-card');
+  if (skippedStyle) cls.push('skipped-card');
+  const meta = ex.type==='cardio' ? ex.desc : `${ex.sets} sets × ${ex.reps} reps`;
+  return `<div class="${cls.join(' ')}" style="margin-bottom:${opts.marginBottom || 12}px;">
+    ${renderExImg(ex, completedStyle || skippedStyle)}
+    <div class="card-inner">
+      <div>
+        <div class="ex-name">${ex.name}${muscleTag(ex.muscle)}</div>
+        <div class="ex-meta" style="margin-top:3px;">${meta}</div>
+      </div>
+      ${showWeightCtrl ? renderWeightCtrl(ex) : ''}
+      ${renderExProgress(ex)}
+      ${showActions ? renderExActions(ex) : ''}
+      ${opts.extraHTML || ''}
+    </div>
+  </div>`;
+}
+
 function renderWorkoutPage() {
   const session = getOrCreateSession();
-  const allExercises = session.exercises.filter(e => e.accepted);
-  const total = allExercises.length;
-  // Bucket exercises:
-  // - active: at least one pending set
-  // - completed: no pending and at least one done set (mixed done/skipped also goes here)
-  // - fullySkipped: every set is skipped
-  const active = allExercises.filter(e => e.setStatus.some(s => s === 'pending'));
-  const fullySkipped = allExercises.filter(e => e.setStatus.length > 0 && e.setStatus.every(s => s === 'skipped'));
-  const completed = allExercises.filter(e =>
+  const tab = state.workoutTab || 'default';
+
+  // Tab counts (done / total) — uses each list's accepted exercises
+  function tabCounts(list) {
+    const all = (list || []).filter(e => e.accepted);
+    const done = all.filter(e => e.setStatus.length > 0 && e.setStatus.every(s => s !== 'pending')).length;
+    return { done, total: all.length };
+  }
+  const dC = tabCounts(session.exercises);
+  const rC = tabCounts(session.remixExercises);
+  const sC = tabCounts(session.skipSuggestExercises);
+
+  document.getElementById('page-title').textContent = "Today's Session";
+  document.getElementById('page-sub').textContent = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
+  const cur = tab === 'remix' ? rC : tab === 'skipSuggest' ? sC : dC;
+  document.getElementById('top-badge').textContent = `${cur.done} / ${cur.total}`;
+
+  // Tab strip
+  let html = `<div class="workout-tabs">
+    <div class="workout-tab ${tab==='default'?'active':''}" onclick="switchWorkoutTab('default')">Default <span class="workout-tab-count">${dC.done}/${dC.total}</span></div>
+    <div class="workout-tab ${tab==='remix'?'active':''}" onclick="switchWorkoutTab('remix')">Remix <span class="workout-tab-count">${rC.done}/${rC.total}</span></div>
+    <div class="workout-tab ${tab==='skipSuggest'?'active':''}" onclick="switchWorkoutTab('skipSuggest')">Skip-Alts <span class="workout-tab-count">${sC.done}/${sC.total}</span></div>
+  </div><div class="page-pad" style="padding-top:0;">`;
+
+  if (tab === 'default') html += renderDefaultTabBody(session);
+  else if (tab === 'remix') html += renderRemixTabBody(session);
+  else if (tab === 'skipSuggest') html += renderSkipSuggestTabBody(session);
+
+  html += `</div>`;
+  document.getElementById('main-screen').innerHTML = html;
+
+  // Draw canvases for exercises without custom images, across all three lists (only those present in DOM render)
+  const allRendered = [
+    ...(session.exercises || []),
+    ...(session.remixExercises || []),
+    ...(session.skipSuggestExercises || []),
+  ];
+  for (const ex of allRendered) {
+    const cvs = document.getElementById(`cvs-${ex.id}`);
+    if (cvs) { cvs.width = 96; cvs.height = 120; drawExerciseThumb(cvs, ex.emoji, ex.muscle); }
+  }
+}
+
+function switchWorkoutTab(tab) {
+  state.workoutTab = tab;
+  saveState();
+  renderWorkoutPage();
+  // Scroll the main screen back to top when switching tabs
+  const scr = document.getElementById('main-screen');
+  if (scr) scr.scrollTop = 0;
+}
+
+// ─── DEFAULT TAB ──────────────────────────────────────────────────────────────
+function renderDefaultTabBody(session) {
+  const all = session.exercises.filter(e => e.accepted);
+  const total = all.length;
+  const active = all.filter(e => e.setStatus.some(s => s === 'pending'));
+  const fullySkipped = all.filter(e => e.setStatus.length > 0 && e.setStatus.every(s => s === 'skipped'));
+  const completed = all.filter(e =>
     e.setStatus.length > 0 &&
     e.setStatus.every(s => s !== 'pending') &&
     e.setStatus.some(s => s === 'done')
@@ -877,29 +1165,20 @@ function renderWorkoutPage() {
   const showCompleted = state.showCompleted || false;
   const showSkipped = state.showSkipped || false;
 
-  document.getElementById('page-title').textContent = "Today's Session";
-  document.getElementById('page-sub').textContent = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
-  document.getElementById('top-badge').textContent = `${noPending} / ${total}`;
-
-  let html = `<div class="page-pad">`;
-
-  // Top progress bar + inline pill buttons
+  let html = '';
   const doneBtn = completed.length > 0
     ? `<button class="pill-btn ${showCompleted ? 'pill-btn-active' : ''}" onclick="toggleShowCompleted()">
         ${showCompleted ? '✓ Hide done' : `✓ ${completed.length} done`}
-       </button>`
-    : '';
+       </button>` : '';
   const skippedBtn = fullySkipped.length > 0
     ? `<button class="pill-btn ${showSkipped ? 'pill-btn-active' : ''}" onclick="toggleShowSkipped()">
         ${showSkipped ? '✕ Hide skipped' : `✕ ${fullySkipped.length} skipped`}
-       </button>`
-    : '';
+       </button>` : '';
   html += `<div style="padding: 12px 20px 0;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;">
       <span style="font-size:12px;color:var(--text2);">${remaining > 0 ? `${remaining} remaining` : 'All done!'}</span>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
-        ${doneBtn}
-        ${skippedBtn}
+        ${doneBtn}${skippedBtn}
         <button class="pill-btn" onclick="showNewSession()">↺ New</button>
       </div>
     </div>
@@ -908,23 +1187,8 @@ function renderWorkoutPage() {
 
   html += `<div class="section-head"><span class="section-title">Exercises</span></div>`;
 
-  // Active exercises
-  for (const ex of active) {
-    html += `<div class="card ex-card" style="margin-bottom:12px;">
-      ${renderExImg(ex, false)}
-      <div class="card-inner">
-        <div>
-          <div class="ex-name">${ex.name}${muscleTag(ex.muscle)}</div>
-          <div class="ex-meta" style="margin-top:3px;">${ex.type==='cardio' ? ex.desc : `${ex.sets} sets × ${ex.reps} reps`}</div>
-        </div>
-        ${renderWeightCtrl(ex)}
-        ${renderExProgress(ex)}
-        ${renderExActions(ex)}
-      </div>
-    </div>`;
-  }
+  for (const ex of active) html += renderExerciseCard(ex);
 
-  // Skipped exercises (conditionally shown) — with inline alt suggestion
   if (fullySkipped.length > 0 && showSkipped) {
     html += `<div class="completed-divider skipped-divider"><span>Skipped</span></div>`;
     for (const ex of fullySkipped) {
@@ -952,25 +1216,13 @@ function renderWorkoutPage() {
     }
   }
 
-  // Completed exercises (conditionally shown)
   if (completed.length > 0 && showCompleted) {
     html += `<div class="completed-divider"><span>Completed</span></div>`;
     for (const ex of completed) {
-      html += `<div class="card ex-card completed-card" style="margin-bottom:12px;">
-        ${renderExImg(ex, true)}
-        <div class="card-inner">
-          <div>
-            <div class="ex-name">${ex.name}${muscleTag(ex.muscle)}</div>
-            <div class="ex-meta" style="margin-top:3px;">${ex.type==='cardio' ? ex.desc : `${ex.sets} sets × ${ex.reps} reps`}</div>
-          </div>
-          ${renderWeightCtrl(ex)}
-          ${renderExProgress(ex)}
-        </div>
-      </div>`;
+      html += renderExerciseCard(ex, { completedStyle: true, showActions: false });
     }
   }
 
-  // All done state — fires when every exercise has no pending sets
   if (noPending === total && total > 0) {
     html += `<div class="card" style="text-align:center;padding:20px;margin-top:4px;">
       <div style="font-size:32px;margin-bottom:8px;">🎉</div>
@@ -979,15 +1231,112 @@ function renderWorkoutPage() {
       <button class="btn btn-primary" style="margin-top:16px;" onclick="finishSession()">Save & Finish</button>
     </div>`;
   }
+  return html;
+}
 
-  html += `</div>`;
-  document.getElementById('main-screen').innerHTML = html;
+// ─── REMIX TAB ────────────────────────────────────────────────────────────────
+function renderRemixTabBody(session) {
+  const all = (session.remixExercises || []).filter(e => e.accepted);
+  const total = all.length;
+  const active = all.filter(e => e.setStatus.some(s => s === 'pending'));
+  const fullySkipped = all.filter(e => e.setStatus.length > 0 && e.setStatus.every(s => s === 'skipped'));
+  const completed = all.filter(e =>
+    e.setStatus.length > 0 &&
+    e.setStatus.every(s => s !== 'pending') &&
+    e.setStatus.some(s => s === 'done')
+  );
+  const noPending = completed.length + fullySkipped.length;
 
-  // Draw canvases for exercises without custom images
-  for (const ex of session.exercises) {
-    const cvs = document.getElementById(`cvs-${ex.id}`);
-    if (cvs) { cvs.width = 96; cvs.height = 120; drawExerciseThumb(cvs, ex.emoji, ex.muscle); }
+  let html = `<div style="padding:12px 20px 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;">
+      <span style="font-size:12px;color:var(--text2);">${total - noPending} remaining</span>
+      <button class="pill-btn" onclick="regenerateRemix()">↻ Re-roll</button>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${total > 0 ? noPending/total*100 : 0}%"></div></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5;">
+      Daily remix — same regions, different exercises. Completing one prompts you to mark same-region defaults complete.
+    </div>
+  </div>`;
+
+  if (total === 0) {
+    html += `<div class="empty"><div class="empty-icon">✦</div>No remix exercises yet.</div>`;
+    return html;
   }
+
+  html += `<div class="section-head"><span class="section-title">Remix Exercises</span></div>`;
+  for (const ex of active) html += renderExerciseCard(ex);
+
+  if (fullySkipped.length > 0) {
+    html += `<div class="completed-divider skipped-divider"><span>Skipped</span></div>`;
+    for (const ex of fullySkipped) {
+      const extra = `<div class="ex-actions-row">
+        <button class="btn btn-skip" onclick="reAddSkipped('${ex.id}')">↺ Re-add</button>
+      </div>`;
+      html += renderExerciseCard(ex, { skippedStyle: true, showActions: false, extraHTML: extra });
+    }
+  }
+  if (completed.length > 0) {
+    html += `<div class="completed-divider"><span>Completed</span></div>`;
+    for (const ex of completed) html += renderExerciseCard(ex, { completedStyle: true, showActions: false });
+  }
+  return html;
+}
+
+// ─── SKIP-SUGGEST TAB ────────────────────────────────────────────────────────
+function renderSkipSuggestTabBody(session) {
+  const all = (session.skipSuggestExercises || []).filter(e => e.accepted);
+  const total = all.length;
+  const active = all.filter(e => e.setStatus.some(s => s === 'pending'));
+  const fullySkipped = all.filter(e => e.setStatus.length > 0 && e.setStatus.every(s => s === 'skipped'));
+  const completed = all.filter(e =>
+    e.setStatus.length > 0 &&
+    e.setStatus.every(s => s !== 'pending') &&
+    e.setStatus.some(s => s === 'done')
+  );
+  const noPending = completed.length + fullySkipped.length;
+
+  let html = `<div style="padding:12px 20px 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;">
+      <span style="font-size:12px;color:var(--text2);">${total === 0 ? 'Nothing skipped yet' : `${total - noPending} remaining`}</span>
+    </div>
+    ${total > 0 ? `<div class="prog-bar"><div class="prog-fill" style="width:${noPending/total*100}%"></div></div>` : ''}
+    <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5;">
+      Alternatives for exercises you've skipped — sourced by region. Completions count toward your muscle volume.
+    </div>
+  </div>`;
+
+  if (total === 0) {
+    html += `<div class="empty"><div class="empty-icon">↪</div>Skip an exercise to see suggested alternatives here.</div>`;
+    return html;
+  }
+
+  html += `<div class="section-head"><span class="section-title">Suggestions</span></div>`;
+  for (const ex of active) {
+    const extra = ex.sourceName ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">For skipped: ${ex.sourceName}</div>` : '';
+    html += renderExerciseCard(ex, { extraHTML: extra });
+  }
+  if (fullySkipped.length > 0) {
+    html += `<div class="completed-divider skipped-divider"><span>Skipped</span></div>`;
+    for (const ex of fullySkipped) {
+      const extra = `<div class="ex-actions-row">
+        <button class="btn btn-skip" onclick="reAddSkipped('${ex.id}')">↺ Re-add</button>
+      </div>`;
+      html += renderExerciseCard(ex, { skippedStyle: true, showActions: false, extraHTML: extra });
+    }
+  }
+  if (completed.length > 0) {
+    html += `<div class="completed-divider"><span>Completed</span></div>`;
+    for (const ex of completed) html += renderExerciseCard(ex, { completedStyle: true, showActions: false });
+  }
+  return html;
+}
+
+function regenerateRemix() {
+  const session = getOrCreateSession();
+  session.remixExercises = generateRemixExercises(session.exercises);
+  saveState();
+  renderWorkoutPage();
+  showToast('↻ Remix re-rolled');
 }
 
 function toggleShowCompleted() {
@@ -1003,73 +1352,92 @@ function toggleShowCompleted() {
   }
 }
 
-function renderSuggestPage() {
-  document.getElementById('page-title').textContent = 'Suggestions';
-  document.getElementById('page-sub').textContent = 'AI-powered alternatives from exercise library';
-  document.getElementById('top-badge').textContent = `${state.pendingSuggestions.length}`;
-  generateSuggestions();
+function renderLibraryPage() {
+  document.getElementById('page-title').textContent = 'Library';
+  document.getElementById('page-sub').textContent = 'Browse all exercises';
+  const allEx = Object.values(EXERCISE_DB).flat();
+  document.getElementById('top-badge').textContent = `${allEx.length}`;
 
+  const filter = state.libraryFilter || 'all';
   let html = `<div class="page-pad">`;
-
-  if (state.pendingSuggestions.length === 0) {
-    html += `<div class="empty"><div class="empty-icon">✦</div>No new suggestions for today.<br>Complete some sets and check back!</div>`;
-  } else {
-    html += `<div style="height:8px;"></div>`;
-    for (let i = 0; i < state.pendingSuggestions.length; i++) {
-      const s = state.pendingSuggestions[i];
-      const alt = s.suggestion;
-      html += `<div class="suggest-card" style="padding:0;overflow:hidden;">
-        <div style="padding:12px 14px 8px 14px;border-bottom:0.5px solid rgba(200,255,0,0.2);">
-          <div class="suggest-label" style="margin-bottom:0;">Replace: ${s.replaceName}</div>
-        </div>
-        <div style="display:flex;align-items:stretch;min-height:110px;">
-          ${renderExImg(alt, false)}
-          <div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0;">
-            <div>
-              <div class="ex-name">${alt.name}${muscleTag(alt.muscle)}</div>
-              <div class="ex-meta" style="margin-top:3px;">${alt.sets} sets × ${alt.reps} reps · ${alt.weight} kg</div>
-            </div>
-            <div style="font-size:12px;color:var(--text2);background:var(--surface2);padding:6px 8px;border-radius:6px;">💡 ${s.reason}</div>
-          </div>
-        </div>
-        <div class="suggest-actions" style="padding:0 14px 14px;">
-          <button class="btn btn-accept" onclick="acceptSuggestion(${i})">✓ Accept</button>
-          <button class="btn btn-reject" onclick="rejectSuggestion(${i})">✕</button>
-        </div>
-      </div>`;
-    }
-  }
-
-  html += `<div class="section-head" style="margin-top:8px;"><span class="section-title">Browse Library</span></div>`;
+  html += `<div class="section-head"><span class="section-title">All Exercises</span></div>`;
   html += `<div class="chip-row" style="padding:0 16px 4px;">`;
+  html += `<div class="chip ${filter==='all'?'on':''}" onclick="filterLib('all')">All</div>`;
   const groups = ['Cardio','Legs','Back','Chest','Biceps','Triceps','Shoulders','Core'];
   for (const g of groups) {
-    html += `<div class="chip" onclick="filterLib('${g.toLowerCase()}')" id="chip-${g.toLowerCase()}">${g}</div>`;
+    const key = g.toLowerCase();
+    html += `<div class="chip ${filter===key?'on':''}" onclick="filterLib('${key}')">${g}</div>`;
   }
   html += `</div>`;
 
-  // Show all exercises from DB in library view
-  html += `<div id="lib-list">`;
-  const allEx = Object.values(EXERCISE_DB).flat();
-  for (const ex of allEx.slice(0, 20)) {
+  html += `<div id="lib-list">${renderLibraryList(filter)}</div>`;
+  html += `</div>`;
+  document.getElementById('main-screen').innerHTML = html;
+}
+
+function renderLibraryList(filter) {
+  const everDone = state.completedExerciseNames || {};
+  const list = filter === 'all'
+    ? Object.values(EXERCISE_DB).flat()
+    : (MUSCLE_ALTERNATIVES[filter] || []);
+  if (list.length === 0) {
+    return `<div class="empty"><div class="empty-icon">📚</div>No exercises in this category.</div>`;
+  }
+  let html = '';
+  for (const ex of list) {
+    const done = !!everDone[normalizeName(ex.name)];
+    const badge = done ? `<span class="lib-ever-badge">✓ Done</span>` : '';
     html += `<div class="hist-item">
       <div style="font-size:24px;width:36px;text-align:center;">${ex.emoji}</div>
       <div class="hist-info">
-        <div class="hist-title">${ex.name}${muscleTag(ex.muscle)}</div>
+        <div class="hist-title">${ex.name}${muscleTag(ex.muscle)}${badge}</div>
         <div class="hist-sub">${ex.desc} · ${ex.type==='cardio'?'Cardio':`${ex.sets}×${ex.reps}`}</div>
       </div>
       <div style="font-size:12px;color:var(--text3);">${ex.weight>0?ex.weight+'kg':''}</div>
     </div>`;
   }
-  html += `</div></div>`;
-  document.getElementById('main-screen').innerHTML = html;
+  return html;
+}
 
-  // Draw canvas placeholders for any suggestion alt without a custom image
-  for (const s of state.pendingSuggestions) {
-    const alt = s.suggestion;
-    const cvs = document.getElementById(`cvs-${alt.id}`);
-    if (cvs) { cvs.width = 96; cvs.height = 120; drawExerciseThumb(cvs, alt.emoji, alt.muscle); }
+// Colors per muscle group, matching the existing tag palette where possible
+const MUSCLE_GROUP_COLORS = {
+  legs: '#ff9f4a',
+  back: '#C8FF00',
+  chest: '#ff4444',
+  biceps: '#4cff91',
+  triceps: '#4cff91',
+  shoulders: '#ffd24a',
+  core: '#b380ff',
+  cardio: '#4ab0ff',
+};
+
+// SVG donut chart for a per-session muscle-volume breakdown
+function renderDonut(volume) {
+  const entries = Object.keys(volume).map(k => [k, volume[k] || 0]).filter(([_, v]) => v > 0);
+  const total = entries.reduce((a, [, v]) => a + v, 0);
+  const C = 2 * Math.PI * 14; // circumference at r=14
+  if (total === 0) {
+    return `<svg class="donut" viewBox="0 0 36 36">
+      <circle cx="18" cy="18" r="14" fill="none" stroke="var(--surface3)" stroke-width="4"/>
+      <text x="18" y="21" text-anchor="middle" class="donut-center">0</text>
+    </svg>`;
   }
+  let offset = 0;
+  const segments = entries.map(([g, v]) => {
+    const dash = (v / total) * C;
+    const color = MUSCLE_GROUP_COLORS[g] || 'var(--accent)';
+    const seg = `<circle cx="18" cy="18" r="14" fill="none" stroke="${color}" stroke-width="4"
+      stroke-dasharray="${dash.toFixed(2)} ${(C - dash).toFixed(2)}"
+      stroke-dashoffset="${(-offset).toFixed(2)}"
+      transform="rotate(-90 18 18)" />`;
+    offset += dash;
+    return seg;
+  }).join('');
+  return `<svg class="donut" viewBox="0 0 36 36">
+    <circle cx="18" cy="18" r="14" fill="none" stroke="var(--surface2)" stroke-width="4"/>
+    ${segments}
+    <text x="18" y="21" text-anchor="middle" class="donut-center">${total}</text>
+  </svg>`;
 }
 
 function renderHistoryPage() {
@@ -1090,22 +1458,51 @@ function renderHistoryPage() {
   if (state.sessions.length === 0) {
     html += `<div class="empty"><div class="empty-icon">◷</div>No completed sessions yet.<br>Finish your first workout!</div>`;
   } else {
-    html += `<div class="section-head"><span class="section-title">Recent</span></div>`;
-    for (const s of [...state.sessions].reverse().slice(0, 20)) {
-      const pct = Math.round((s.completedSets / s.totalSets) * 100);
-      html += `<div class="hist-item">
-        <div class="hist-dot ${pct < 50 ? 'rest' : ''}"></div>
+    html += `<div class="section-head">
+      <span class="section-title">Recent</span>
+      <span class="section-action" style="font-size:11px;color:var(--text3);cursor:default;">muscle focus per day</span>
+    </div>`;
+    for (const s of [...state.sessions].reverse().slice(0, 30)) {
+      const pct = s.totalSets > 0 ? Math.round((s.completedSets / s.totalSets) * 100) : 0;
+      const volume = s.muscleVolume || {};
+      const groupEntries = Object.keys(volume).map(g => [g, volume[g] || 0]).filter(([_, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+      const chips = groupEntries.map(([g, v]) =>
+        `<span class="day-region-chip">
+          <span class="day-region-dot" style="background:${MUSCLE_GROUP_COLORS[g] || 'var(--accent)'};"></span>
+          ${MUSCLE_GROUP_LABELS[g] || g} <span style="color:var(--text3);font-family:var(--mono);">${v}</span>
+        </span>`
+      ).join('');
+      html += `<div class="hist-item-rich">
+        ${renderDonut(volume)}
         <div class="hist-info">
           <div class="hist-title">${s.date}</div>
-          <div class="hist-sub">${s.completedSets} / ${s.totalSets} sets · ${s.exerciseCount} exercises</div>
+          <div class="hist-sub">${s.completedSets} / ${s.totalSets} sets · ${s.exerciseCount} exercises · ${pct}%</div>
+          ${chips ? `<div class="day-regions">${chips}</div>` : ''}
         </div>
-        <div class="hist-tag">${pct}%</div>
       </div>`;
     }
+
+    // Reset progress (for new year)
+    html += `<div style="padding:18px 20px 0;display:flex;justify-content:center;">
+      <button class="danger-btn" onclick="resetProgress()">↺ Reset progress for new year</button>
+    </div>
+    <div style="padding:6px 20px 0;text-align:center;font-size:11px;color:var(--text3);">
+      Clears completed-session history. Saved weights and images are kept.
+    </div>`;
   }
 
   html += `</div>`;
   document.getElementById('main-screen').innerHTML = html;
+}
+
+function resetProgress() {
+  const yr = new Date().getFullYear();
+  if (!confirm(`Reset your progress for ${yr}?\n\nThis clears your completed-session history and ever-completed library marks. Saved weights and exercise images will be kept.`)) return;
+  state.sessions = [];
+  state.completedExerciseNames = {};
+  saveState();
+  showToast('↺ Progress reset');
+  renderHistoryPage();
 }
 
 // Muscle group labels for charts/legends
@@ -1114,14 +1511,22 @@ const MUSCLE_GROUP_LABELS = {
   biceps: 'Biceps', triceps: 'Triceps', shoulders: 'Shoulders', core: 'Core',
 };
 
-// Sets actually completed (not skipped) per muscle group, for one session
+// Sets actually completed (not skipped) per muscle group, for one session.
+// Counts completions across default + remix + skip-suggest exercises.
 function getSessionMuscleVolume(session) {
   const vol = {};
-  for (const ex of (session.exercises || [])) {
-    if (!ex.accepted) continue;
-    const group = getMuscleGroup(ex);
-    const done = ex.setStatus.filter(s => s === 'done').length;
-    if (done > 0) vol[group] = (vol[group] || 0) + done;
+  const lists = [
+    session.exercises || [],
+    session.remixExercises || [],
+    session.skipSuggestExercises || [],
+  ];
+  for (const list of lists) {
+    for (const ex of list) {
+      if (!ex.accepted) continue;
+      const group = getMuscleGroup(ex);
+      const done = (ex.setStatus || []).filter(s => s === 'done').length;
+      if (done > 0) vol[group] = (vol[group] || 0) + done;
+    }
   }
   return vol;
 }
@@ -1161,6 +1566,7 @@ function renderMuscleSVG(totals) {
     <!-- FRONT -->
     <g transform="translate(0,0)">
       <circle cx="50" cy="14" r="11" fill="${baseFill}"/>
+      <text x="50" y="17" text-anchor="middle" fill="var(--text)" font-size="10" font-weight="700" font-family="DM Mono, monospace">F</text>
       <rect x="30" y="28" width="40" height="50" rx="8" fill="${baseFill}"/>
       <rect x="14" y="30" width="14" height="38" rx="6" fill="${baseFill}"/>
       <rect x="72" y="30" width="14" height="38" rx="6" fill="${baseFill}"/>
@@ -1182,6 +1588,7 @@ function renderMuscleSVG(totals) {
     <!-- BACK -->
     <g transform="translate(110,0)">
       <circle cx="50" cy="14" r="11" fill="${baseFill}"/>
+      <text x="50" y="17" text-anchor="middle" fill="var(--text)" font-size="10" font-weight="700" font-family="DM Mono, monospace">B</text>
       <rect x="30" y="28" width="40" height="50" rx="8" fill="${baseFill}"/>
       <rect x="14" y="30" width="14" height="38" rx="6" fill="${baseFill}"/>
       <rect x="72" y="30" width="14" height="38" rx="6" fill="${baseFill}"/>
@@ -1313,38 +1720,50 @@ function toggleShowWeights() {
 // ─── INTERACTIONS ─────────────────────────────────────────────────────────────
 function completeNextSet(exId) {
   const session = getOrCreateSession();
-  const ex = session.exercises.find(e => e.id === exId);
-  if (!ex) return;
+  const slot = findExSlot(session, exId);
+  if (!slot) return;
+  const ex = slot.ex;
   const idx = ex.setStatus.findIndex(s => s === 'pending');
   if (idx === -1) return;
   ex.setStatus[idx] = 'done';
+  markEverCompleted(ex);
+  // Detect transition: was there a pending set left? If not, the exercise just became complete.
+  const justCompletedExercise = !ex.setStatus.some(s => s === 'pending');
   saveState();
   renderWorkoutPage();
   showToast('✓ Set complete');
+  // If a Remix exercise just finished, offer to auto-complete same-region defaults
+  if (justCompletedExercise && slot.list === 'remixExercises') {
+    showRemixAutoCompleteDialog(ex);
+  }
 }
 
 function skipNextSet(exId) {
   const session = getOrCreateSession();
-  const ex = session.exercises.find(e => e.id === exId);
-  if (!ex) return;
+  const slot = findExSlot(session, exId);
+  if (!slot) return;
+  const ex = slot.ex;
   const idx = ex.setStatus.findIndex(s => s === 'pending');
   if (idx === -1) return;
   ex.setStatus[idx] = 'skipped';
-  saveState();
-  // If this was the last pending set and they're all skipped, surface the section
-  if (ex.setStatus.every(s => s === 'skipped')) {
+  const fullySkipped = ex.setStatus.every(s => s === 'skipped');
+  if (fullySkipped) {
     state.showSkipped = true;
-    saveState();
+    // For default and remix tabs: when an exercise becomes fully skipped, add a Skip-Suggest entry
+    if (slot.list === 'exercises' || slot.list === 'remixExercises') {
+      ensureSkipSuggestion(session, ex);
+    }
   }
+  saveState();
   renderWorkoutPage();
-  showToast(ex.setStatus.every(s => s === 'skipped') ? 'Exercise skipped' : 'Set skipped');
+  showToast(fullySkipped ? 'Exercise skipped' : 'Set skipped');
 }
 
 function reAddSkipped(exId) {
   const session = getOrCreateSession();
-  const ex = session.exercises.find(e => e.id === exId);
-  if (!ex) return;
-  ex.setStatus = ex.setStatus.map(() => 'pending');
+  const slot = findExSlot(session, exId);
+  if (!slot) return;
+  slot.ex.setStatus = slot.ex.setStatus.map(() => 'pending');
   saveState();
   renderWorkoutPage();
   showToast('↺ Re-added to active');
@@ -1352,8 +1771,8 @@ function reAddSkipped(exId) {
 
 function swapSkippedFor(exId, altLibId) {
   const session = getOrCreateSession();
-  const exIdx = session.exercises.findIndex(e => e.id === exId);
-  if (exIdx === -1) return;
+  const slot = findExSlot(session, exId);
+  if (!slot) return;
   const allEx = Object.values(EXERCISE_DB).flat();
   const alt = allEx.find(a => a.id === altLibId);
   if (!alt) return;
@@ -1367,10 +1786,105 @@ function swapSkippedFor(exId, altLibId) {
   if (state.userImages && state.userImages[libId]) {
     state.userImages[exId] = state.userImages[libId];
   }
-  session.exercises[exIdx] = newEx;
+  // Preserve list-specific fields where relevant
+  if (slot.list === 'remixExercises') {
+    newEx.linkedDefaultId = slot.ex.linkedDefaultId;
+  }
+  if (slot.list === 'skipSuggestExercises') {
+    newEx.sourceId = slot.ex.sourceId;
+    newEx.sourceName = slot.ex.sourceName;
+  }
+  session[slot.list][slot.idx] = newEx;
   saveState();
   renderWorkoutPage();
   showToast(`✓ Swapped to ${newEx.name}`);
+}
+
+// ─── REMIX AUTO-COMPLETE DIALOG ──────────────────────────────────────────────
+// When a remix exercise is completed, list same-region defaults that are still
+// pending or skipped so the user can mark them done automatically.
+function showRemixAutoCompleteDialog(remixEx) {
+  const session = getOrCreateSession();
+  const group = getMuscleGroup(remixEx);
+  const candidates = (session.exercises || []).filter(d => {
+    if (!d.accepted) return false;
+    if (getMuscleGroup(d) !== group) return false;
+    // Still has pending sets OR every set is skipped
+    const hasPending = d.setStatus.some(s => s === 'pending');
+    const allSkipped = d.setStatus.length > 0 && d.setStatus.every(s => s === 'skipped');
+    return hasPending || allSkipped;
+  });
+  if (candidates.length === 0) return;
+
+  // Build the modal
+  const groupLabel = MUSCLE_GROUP_LABELS[group] || group;
+  const existing = document.getElementById('remix-auto-modal');
+  if (existing) existing.remove();
+  const wrap = document.createElement('div');
+  wrap.id = 'remix-auto-modal';
+  wrap.className = 'gmodal-overlay';
+  // Pre-select all candidates by default
+  const selected = new Set(candidates.map(c => c.id));
+
+  const buildBody = () => `
+    <div class="gmodal-panel" onclick="event.stopPropagation()">
+      <div class="gmodal-handle"></div>
+      <div class="gmodal-title">${groupLabel} addressed 💪</div>
+      <div class="gmodal-sub">You worked this region in the remix. Mark these defaults complete for today?</div>
+      ${candidates.map(c => {
+        const isSel = selected.has(c.id);
+        const meta = c.type === 'cardio' ? 'Cardio' : `${c.setStatus.length} set${c.setStatus.length===1?'':'s'} · ${c.muscle}`;
+        return `<div class="gmodal-row ${isSel ? 'selected' : ''}" data-id="${c.id}">
+          <div class="gmodal-check">${isSel ? '✓' : ''}</div>
+          <div class="gmodal-row-info">
+            <div class="gmodal-row-name">${c.name}</div>
+            <div class="gmodal-row-meta">${meta}</div>
+          </div>
+        </div>`;
+      }).join('')}
+      <div class="gmodal-actions">
+        <button class="btn btn-skip" onclick="closeRemixAutoModal()">Skip</button>
+        <button class="btn btn-accept" id="remix-auto-confirm">Mark complete</button>
+      </div>
+    </div>`;
+
+  wrap.innerHTML = buildBody();
+  wrap.addEventListener('click', () => closeRemixAutoModal());
+  document.body.appendChild(wrap);
+
+  // Wire up row toggles
+  wrap.querySelectorAll('.gmodal-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const id = row.getAttribute('data-id');
+      if (selected.has(id)) selected.delete(id); else selected.add(id);
+      row.classList.toggle('selected');
+      const chk = row.querySelector('.gmodal-check');
+      if (chk) chk.textContent = selected.has(id) ? '✓' : '';
+    });
+  });
+
+  // Confirm button
+  wrap.querySelector('#remix-auto-confirm').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (selected.size === 0) { closeRemixAutoModal(); return; }
+    const session2 = getOrCreateSession();
+    let marked = 0;
+    for (const d of session2.exercises) {
+      if (!selected.has(d.id)) continue;
+      d.setStatus = d.setStatus.map(() => 'done');
+      markEverCompleted(d);
+      marked++;
+    }
+    saveState();
+    closeRemixAutoModal();
+    renderWorkoutPage();
+    showToast(`✓ ${marked} default${marked===1?'':'s'} marked complete`);
+  });
+}
+
+function closeRemixAutoModal() {
+  const el = document.getElementById('remix-auto-modal');
+  if (el) el.remove();
 }
 
 function toggleShowSkipped() {
@@ -1387,8 +1901,9 @@ function toggleShowSkipped() {
 
 function changeWeight(exId, delta) {
   const session = getOrCreateSession();
-  const ex = session.exercises.find(e => e.id === exId);
-  if (!ex) return;
+  const slot = findExSlot(session, exId);
+  if (!slot) return;
+  const ex = slot.ex;
   ex.weight = Math.max(0, Math.round((ex.weight + delta) * 4) / 4);
   state.weights[exId] = ex.weight;
   saveState();
@@ -1397,55 +1912,10 @@ function changeWeight(exId, delta) {
   showToast(`${ex.weight} kg`);
 }
 
-function acceptSuggestion(idx) {
-  const s = state.pendingSuggestions[idx];
-  const session = getOrCreateSession();
-  const exIdx = session.exercises.findIndex(e => e.id === s.replaceId);
-  if (exIdx !== -1) {
-    const alt = deepClone(s.suggestion);
-    const libId = alt.id; // remember the library id (for image transfer)
-    alt.id = s.replaceId; // keep same ID slot
-    alt.swappedFromBase = true; // prevents the rename migration from undoing this
-    alt.setStatus = Array(alt.type === 'cardio' ? 1 : alt.sets).fill('pending');
-    alt.accepted = true;
-    if (state.weights[alt.id]) alt.weight = state.weights[alt.id];
-    // Transfer any image set on the suggestion to the slot
-    if (state.userImages && state.userImages[libId]) {
-      state.userImages[s.replaceId] = state.userImages[libId];
-    }
-    session.exercises[exIdx] = alt;
-  }
-  state.pendingSuggestions.splice(idx, 1);
-  saveState();
-  showToast(`✓ Swapped to ${s.suggestion.name}`);
-  renderSuggestPage();
-}
-
-function rejectSuggestion(idx) {
-  state.pendingSuggestions.splice(idx, 1);
-  saveState();
-  renderSuggestPage();
-}
-
 function filterLib(group) {
-  const chips = document.querySelectorAll('.chip');
-  chips.forEach(c => c.classList.remove('on'));
-  const chip = document.getElementById(`chip-${group}`);
-  if (chip) chip.classList.add('on');
-  const exList = MUSCLE_ALTERNATIVES[group] || [];
-  let html = '';
-  for (const ex of exList) {
-    html += `<div class="hist-item">
-      <div style="font-size:24px;width:36px;text-align:center;">${ex.emoji}</div>
-      <div class="hist-info">
-        <div class="hist-title">${ex.name}${muscleTag(ex.muscle)}</div>
-        <div class="hist-sub">${ex.desc} · ${ex.type==='cardio'?'Cardio':`${ex.sets}×${ex.reps}`}</div>
-      </div>
-      <div style="font-size:12px;color:var(--text3);">${ex.weight>0?ex.weight+'kg':''}</div>
-    </div>`;
-  }
-  const libList = document.getElementById('lib-list');
-  if (libList) libList.innerHTML = html;
+  state.libraryFilter = group;
+  saveState();
+  renderLibraryPage();
 }
 
 function finishSession() {
@@ -1474,11 +1944,13 @@ function showNewSession() {
 }
 
 function showPage(page) {
+  // Migrate old 'suggest' page to the new 'library' page
+  if (page === 'suggest') page = 'library';
   state.page = page;
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`nav-${page}`)?.classList.add('active');
   if (page === 'workout') renderWorkoutPage();
-  else if (page === 'suggest') renderSuggestPage();
+  else if (page === 'library') renderLibraryPage();
   else if (page === 'history') renderHistoryPage();
   else if (page === 'progress') renderProgressPage();
 }
@@ -1492,7 +1964,6 @@ function showToast(msg) {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-generateSuggestions();
 showPage('workout');
 </script>
 </body>
